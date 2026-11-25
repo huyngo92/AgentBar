@@ -1,0 +1,2107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentBar</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f7f7f5;
+  --sidebar: rgba(238, 238, 235, 0.72);
+  --surface: #ffffff;
+  --raised: #f2f2ef;
+  --text: #111318;
+  --text-2: #505663;
+  --muted: #848a96;
+  --border: rgba(15, 23, 42, 0.085);
+  --border-strong: rgba(15, 23, 42, 0.16);
+  --ring: rgba(17, 19, 24, 0.2);
+  --grid: #e7e7e2;
+  --axis: #cfcfc8;
+  --hover: rgba(15, 23, 42, 0.045);
+  --primary: #111318;
+  --primary-ink: #ffffff;
+  --danger: #DC2626;
+  --ok: #16A34A;
+  --warn: #D97706;
+  --claude: #D97757;
+  --ag: #16A34A;
+  --track: rgba(15, 23, 42, 0.08);
+  --toast-bg: rgba(22, 24, 29, 0.88);
+  --toast-fg: #f8fafc;
+  --s1: #D97757; --s2: #16A34A; --s3: #2563EB; --s4: #D97706; --s5: #EC4899;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #121317;
+    --sidebar: rgba(22, 24, 29, 0.72);
+    --surface: #1A1C22;
+    --raised: #23262E;
+    --text: #F2F4F8;
+    --text-2: #A8AFBE;
+    --muted: #707787;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.15);
+    --ring: rgba(242, 244, 248, 0.25);
+    --grid: #252830;
+    --axis: #353944;
+    --hover: rgba(255, 255, 255, 0.055);
+    --primary: #F2F4F8;
+    --primary-ink: #111215;
+    --danger: #F87171;
+    --ok: #22C55E;
+    --warn: #F59E0B;
+    --claude: #E38464;
+    --ag: #34D399;
+    --track: rgba(255, 255, 255, 0.09);
+    --toast-bg: rgba(242, 244, 248, 0.92);
+    --toast-fg: #111318;
+    --s1: #E38464; --s2: #34D399; --s3: #60A5FA; --s4: #FBBF24; --s5: #F472B6;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #121317;
+  --sidebar: rgba(22, 24, 29, 0.72);
+  --surface: #1A1C22;
+  --raised: #23262E;
+  --text: #F2F4F8;
+  --text-2: #A8AFBE;
+  --muted: #707787;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --ring: rgba(242, 244, 248, 0.25);
+  --grid: #252830;
+  --axis: #353944;
+  --hover: rgba(255, 255, 255, 0.055);
+  --primary: #F2F4F8;
+  --primary-ink: #111215;
+  --danger: #F87171;
+  --ok: #22C55E;
+  --warn: #F59E0B;
+  --claude: #E38464;
+  --ag: #34D399;
+  --track: rgba(255, 255, 255, 0.09);
+  --toast-bg: rgba(242, 244, 248, 0.92);
+  --toast-fg: #111318;
+  --s1: #E38464; --s2: #34D399; --s3: #60A5FA; --s4: #FBBF24; --s5: #F472B6;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-size: 13px; background: transparent; color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none; user-select: none;
+}
+code, input, textarea, table, .models-line, .item-sub {
+  -webkit-user-select: text; user-select: text;
+}
+
+/* Native macOS Overlay Titlebar Drag Strip */
+.titlebar-drag {
+  position: fixed; top: 0; left: 0; right: 0; height: 32px;
+  z-index: 12;
+}
+.titlebar-drag::after {
+  content: ""; position: absolute; top: 0; left: 208px; right: 0; height: 32px;
+  background: linear-gradient(to bottom, var(--page) 45%, transparent);
+  pointer-events: none;
+}
+@media (max-width: 700px) { .titlebar-drag::after { left: 0; } }
+
+.layout { display: grid; grid-template-columns: 208px 1fr; height: 100vh; overflow: hidden; }
+@media (max-width: 700px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+}
+
+/* Sidebar with native vibrancy */
+.sidebar {
+  background: var(--sidebar);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-right: 0.5px solid var(--border-strong);
+  display: flex; flex-direction: column;
+  padding: 42px 10px 14px; gap: 14px;
+}
+.sb-brand { display: flex; align-items: center; gap: 8px; padding: 2px 8px; }
+.sb-brand svg { width: 17px; height: 17px; color: var(--text); flex: none; }
+.sb-brand h1 { font-size: 13px; font-weight: 700; margin: 0; letter-spacing: -0.01em; }
+
+.nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px; padding: 7px 10px; border-radius: 7px;
+  border: 0; background: transparent; color: var(--text-2); font: inherit; font-weight: 550;
+  cursor: pointer; text-align: left;
+  transition: background 120ms ease, color 120ms ease, transform 80ms ease;
+}
+.nav-item:hover { background: var(--hover); color: var(--text); }
+.nav-item:active { transform: scale(0.985); }
+.nav-item.active {
+  background: var(--surface); color: var(--text);
+  box-shadow: 0 1px 2.5px rgba(0,0,0,0.07), 0 0 0 0.5px var(--border-strong);
+}
+.nav-item svg { width: 15px; height: 15px; flex: none; }
+.nav-count { margin-left: auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.sb-foot { border-top: 0.5px solid var(--border-strong); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.sb-lines { font-size: 11px; color: var(--text-2); padding: 0 4px; display: flex; flex-direction: column; gap: 4px; }
+.sb-line { display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-tools { display: flex; gap: 4px; }
+.sb-tools .btn { flex: 1; justify-content: center; padding: 5px 6px; font-size: 11px; }
+.sb-tools .btn.lang-btn { flex: 0 0 auto; padding: 5px 7px; font-weight: 700; letter-spacing: 0.02em; }
+
+/* Main */
+.main {
+  background: var(--page); overflow-y: auto;
+  padding: 34px 28px 36px; overscroll-behavior: contain;
+}
+@media (max-width: 700px) { .main { padding-top: 44px; } }
+.main::-webkit-scrollbar { width: 6px; }
+.main::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+
+.page-wrap { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.page-head h2 { font-size: 18px; font-weight: 700; margin: 0; letter-spacing: -0.015em; }
+.page-head .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.pane { display: none; flex-direction: column; gap: 14px; }
+.pane.active {
+  display: flex;
+  animation: paneIn 140ms cubic-bezier(0.2, 0.85, 0.3, 1);
+}
+@keyframes paneIn {
+  from { opacity: 0.01; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  background: var(--surface); border: 0.5px solid var(--border-strong);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  border-radius: 10px; padding: 15px 16px;
+}
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+.card-head h3 { font-size: 13.5px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+.hint { color: var(--muted); font-size: 12px; }
+
+.seg { display: inline-flex; background: var(--raised); border: 0.5px solid var(--border-strong); border-radius: 7px; padding: 2px; gap: 2px; }
+.seg button {
+  border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 11.5px;
+  font-weight: 550; padding: 4px 9px; border-radius: 5px; cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+.btn {
+  padding: 6px 11px; border-radius: 7px; border: 0.5px solid var(--border-strong);
+  background: var(--raised); color: var(--text); cursor: pointer; font: inherit;
+  font-size: 12px; font-weight: 550; display: inline-flex; align-items: center; gap: 5px;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease, filter 120ms ease;
+}
+.btn:hover:not(:disabled) { background: var(--hover); }
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn svg { width: 13px; height: 13px; }
+.btn-primary { background: var(--primary); color: var(--primary-ink); border-color: transparent; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.08); background: var(--primary); }
+.btn-danger { color: var(--danger); }
+
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: none; box-shadow: 0 0 0 2.5px var(--ring);
+}
+
+.pill { font-size: 10.5px; padding: 1px 7px; border-radius: 99px; font-weight: 600; background: var(--raised); color: var(--text-2); border: 0.5px solid var(--border-strong); }
+.pill.ok { color: var(--ok); border-color: rgba(34,197,94,0.35); }
+.pill.warn { color: var(--warn); border-color: rgba(245,158,11,0.35); }
+.pill.bad { color: var(--danger); border-color: rgba(239,68,68,0.35); }
+.dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex: none; }
+.dot.on { background: var(--ok); }
+.dot.cl { background: var(--claude); }
+.dot.ag { background: var(--ag); }
+
+/* Tiles & Chart */
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+.tile { background: var(--page); border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 10px 12px; }
+.tile .label { color: var(--muted); font-size: 11px; }
+.tile .value { font-size: 18px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; letter-spacing: -0.015em; }
+.tile .sub { font-size: 11px; color: var(--text-2); margin-top: 1px; font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+
+.chart-wrap { position: relative; }
+#chart { display: block; width: 100%; height: 185px; overflow: visible; }
+#chart text { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+#chart .grid { stroke: var(--grid); stroke-width: 1; }
+#chart .base { stroke: var(--axis); stroke-width: 1; }
+#chart .hit { fill: transparent; }
+#chart .col { transition: opacity 110ms ease; }
+#chart .col.dim { opacity: 0.28; }
+.tip {
+  position: absolute; pointer-events: none; background: var(--surface);
+  border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 8px 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.16); min-width: 195px; white-space: nowrap;
+  font-size: 11.5px; display: none; z-index: 5;
+}
+.tip .t-date { font-weight: 650; margin-bottom: 4px; }
+.tip .row, .legend .item { display: flex; align-items: center; gap: 6px; }
+.tip .row { justify-content: space-between; gap: 14px; }
+.tip .row span:last-child { font-variant-numeric: tabular-nums; }
+.tip .total { border-top: 0.5px solid var(--border-strong); margin-top: 4px; padding-top: 4px; font-weight: 650; }
+.sw { width: 9px; height: 9px; border-radius: 2px; flex: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px; color: var(--text-2); font-size: 11.5px; }
+.legend .item b { color: var(--text); font-weight: 650; font-variant-numeric: tabular-nums; }
+.empty { color: var(--muted); text-align: center; padding: 36px 0; }
+
+.split2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 760px) { .split2 { grid-template-columns: 1fr; } }
+
+/* Quota Grid */
+.q-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 600px) { .q-grid { grid-template-columns: 1fr; } }
+.q-box { background: var(--page); border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; }
+.q-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.q-name { font-weight: 600; font-size: 12px; }
+.q-pct { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 12.5px; }
+.q-bar { height: 5px; border-radius: 99px; background: var(--track); overflow: hidden; }
+.q-fill { height: 100%; border-radius: 99px; transition: width 240ms cubic-bezier(0.22, 1, 0.36, 1); }
+.q-meta { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pace-reserve { color: var(--ok); }
+.pace-deficit { color: var(--danger); }
+
+.rank-row { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+.rank-row:last-child { border-bottom: 0; }
+.rank-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; font-size: 12px; }
+.rank-name { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-bar { height: 4px; border-radius: 99px; background: var(--track); overflow: hidden; }
+
+/* Item rows */
+.item-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 10px 12px; border: 0.5px solid var(--border-strong); border-radius: 8px;
+  margin-bottom: 7px; background: var(--page);
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.item-row:last-child { margin-bottom: 0; }
+.item-row.active { border-color: var(--text-2); background: var(--raised); }
+.item-row.dashed { border-style: dashed; }
+.item-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.item-title { font-weight: 650; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; }
+.item-sub { font-size: 11.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.models-line { font-size: 11px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-actions { display: flex; gap: 5px; flex: none; flex-wrap: wrap; }
+
+/* Failover */
+.chain-row { display: grid; grid-template-columns: auto 22px 1fr auto; align-items: center; gap: 8px; padding: 7px 10px; border: 0.5px solid var(--border-strong); border-radius: 8px; margin-bottom: 6px; background: var(--page); }
+.chain-row.off { opacity: 0.5; }
+.chain-row input[type=checkbox] { width: auto; margin: 0; }
+.chain-row .ord { color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; font-weight: 600; }
+.chain-row .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
+.chain-row .nm small { color: var(--muted); margin-left: 6px; font-weight: 400; }
+.inline-fields { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 10px; }
+.inline-fields .form-group { margin: 0; width: 130px; }
+.status-box { margin-top: 10px; padding: 9px 11px; border-radius: 8px; background: var(--page); border: 0.5px solid var(--border-strong); font-size: 11.5px; color: var(--text-2); line-height: 1.5; }
+.status-box ul { margin: 5px 0 0; padding-left: 16px; }
+.status-box .err { color: var(--danger); }
+
+/* Backup & Settings */
+.check-line { display: flex; align-items: flex-start; gap: 9px; padding: 9px 11px; border-radius: 8px; background: var(--page); border: 0.5px solid var(--border-strong); cursor: pointer; }
+.check-line input { width: auto; margin-top: 2px; }
+.banner { padding: 9px 11px; border-radius: 8px; font-size: 12px; border: 0.5px solid var(--border-strong); background: var(--page); margin-top: 10px; }
+.banner.ok { border-color: rgba(34,197,94,0.4); }
+table { width: 100%; border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums; font-size: 12px; }
+th, td { text-align: left; padding: 7px 8px; border-bottom: 0.5px solid var(--border); }
+th { color: var(--muted); font-weight: 600; font-size: 11px; }
+.num { text-align: right; }
+
+/* Modals & Inputs */
+.form-group { margin-bottom: 11px; }
+label { display: block; font-size: 12px; font-weight: 550; color: var(--text-2); margin-bottom: 4px; }
+input, textarea { width: 100%; padding: 7px 9px; border: 0.5px solid var(--border-strong); border-radius: 7px; background: var(--page); color: var(--text); font: inherit; }
+input:focus, textarea:focus { outline: none; border-color: var(--text-2); }
+textarea { min-height: 68px; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; resize: vertical; }
+textarea.small { min-height: 50px; font-family: inherit; font-size: 12.5px; }
+.modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.42);
+  -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+  display: none; align-items: center; justify-content: center; padding: 16px; z-index: 30;
+}
+.modal-content {
+  background: var(--surface); border: 0.5px solid var(--border-strong);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.28);
+  padding: 18px; border-radius: 12px; width: 500px; max-width: 100%;
+  max-height: calc(100vh - 32px); overflow: auto;
+  animation: modalIn 150ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.97) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-content h2 { font-size: 15px; margin: 0 0 12px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+@media (max-width: 680px) { .grid3 { grid-template-columns: 1fr; } }
+.section { border-top: 0.5px solid var(--border-strong); margin-top: 8px; padding-top: 12px; }
+.section-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.section-head h3 { font-size: 13px; margin: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.chip { border: 0.5px solid var(--border-strong); background: var(--raised); color: var(--text-2); border-radius: 999px; padding: 2px 9px; font: inherit; font-size: 11.5px; cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--text); color: var(--text); font-weight: 600; }
+.model-row { display: grid; grid-template-columns: 115px 1fr; gap: 4px 10px; align-items: center; margin-bottom: 8px; }
+.model-row label { margin: 0; color: var(--text); }
+.model-row label small { display: block; color: var(--muted); font-size: 11px; font-weight: 400; }
+.resolved { grid-column: 2; font-size: 11px; color: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; min-height: 14px; overflow-wrap: anywhere; }
+.resolved .warn { color: var(--danger); font-family: inherit; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.path-row { display: flex; gap: 8px; }
+.path-row input { flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+.dash-toast {
+  position: fixed; bottom: 20px; right: 22px; z-index: 40;
+  background: var(--toast-bg); color: var(--toast-fg);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 550;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  opacity: 0; transform: translateY(6px); pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+.dash-toast.show { opacity: 1; transform: translateY(0); }
+
+.spin svg { animation: spin 0.75s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .pane.active, .modal-content, .spin svg { animation: none; }
+  *, .q-fill, .dash-toast { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="titlebar-drag" data-tauri-drag-region></div>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 12h2.2a3 3 0 0 0 2.6-1.5l1.2-2.2a2 2 0 0 1 1.7-1H15.5"/><path d="M10.7 12a3 3 0 0 1 2.6 1.5l1.2 2.2a2 2 0 0 0 1.7 1h-.7"/></svg>
+      <h1>AgentBar</h1>
+    </div>
+
+    <nav class="nav" role="tablist">
+      <button class="nav-item active" data-section="usage" id="nav-usage" title="Usage & Spend (⌘1)"></button>
+      <button class="nav-item" data-section="claude" id="nav-claude" title="Claude Code (⌘2)"></button>
+      <button class="nav-item" data-section="antigravity" id="nav-antigravity" title="Gemini Antigravity (⌘3)"></button>
+      <button class="nav-item" data-section="backup" id="nav-backup" title="Backup & Import (⌘4)"></button>
+      <button class="nav-item" data-section="settings" id="nav-settings" title="Settings (⌘5 / ⌘,)"></button>
+    </nav>
+
+    <div class="sb-foot">
+      <div class="sb-lines">
+        <div class="sb-line"><span class="dot cl"></span><span id="sb-cl-active">Claude: —</span></div>
+        <div class="sb-line"><span class="dot ag"></span><span id="sb-ag-active">AG: —</span></div>
+      </div>
+      <div class="sb-tools">
+        <button class="btn lang-btn" id="sb-lang" title="Switch language EN / VI">EN</button>
+        <button class="btn" id="sb-privacy" title="Mask/show sensitive data (P)"></button>
+        <button class="btn" id="sb-refresh-quota" title="Refresh quotas (⌘R)"></button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-wrap">
+
+      <!-- ============ 1. USAGE & SPEND ============ -->
+      <section class="pane active" id="pane-usage">
+        <div class="page-head">
+          <div>
+            <h2>Usage & Spend</h2>
+            <div class="sub" data-i18n="usageSub">Tokens, estimated API spend & live quotas</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <div class="seg" id="seg-provider">
+              <button data-prov="all" aria-pressed="true" data-i18n="provAll">All</button>
+              <button data-prov="claude" aria-pressed="false">Claude</button>
+              <button data-prov="antigravity" aria-pressed="false">Antigravity</button>
+            </div>
+            <div class="seg" id="seg-range">
+              <button data-days="7" aria-pressed="false" data-i18n="days7">7 days</button>
+              <button data-days="30" aria-pressed="true" data-i18n="days30">30 days</button>
+            </div>
+            <div class="seg" id="seg-metric">
+              <button data-metric="total" aria-pressed="true" data-i18n="metricTotal">Total</button>
+              <button data-metric="io" aria-pressed="false">I/O</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="tiles" id="tiles"></div>
+          <div class="chart-wrap" id="chart-wrap" hidden>
+            <svg id="chart" role="img" aria-label="Daily token chart"></svg>
+            <div class="tip" id="tip"></div>
+          </div>
+          <div class="empty" id="usage-empty" data-i18n="loadingUsage">Loading usage data…</div>
+          <div class="legend" id="legend"></div>
+        </div>
+
+        <div class="split2">
+          <div class="card">
+            <div class="card-head">
+              <h3 data-i18n="byProviderTitle">Quota & Spend by Provider</h3>
+              <button class="btn" id="dash-refresh-q"></button>
+            </div>
+            <div id="provider-breakdown"></div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h3 data-i18n="topModelsTitle">Top Models (30d)</h3>
+              <span class="hint" data-i18n="estUsd">Est. USD</span>
+            </div>
+            <div id="top-models"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 2. CLAUDE ============ -->
+      <section class="pane" id="pane-claude">
+        <div class="page-head">
+          <div>
+            <h2>Claude Code</h2>
+            <div class="sub" data-i18n="claudeSub">Gateway profiles, model prefixes & automatic failover</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-primary" id="add-btn" data-i18n="addProfileBtn">+ Add Profile</button>
+            <button class="btn" id="import-btn">Import</button>
+            <button class="btn btn-danger" id="remove-all-btn" data-i18n="removeAllBtn">Remove All</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3 data-i18n="clQuotaTitle">Claude Quota</h3>
+            <button class="btn" id="cl-quota-btn" data-i18n="checkKeychainBtn">Check (Keychain)</button>
+          </div>
+          <div id="cl-quota-box"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3 data-i18n="nativeAndProfiles">Native Account & Profiles</h3>
+            <span class="hint">~/.claude/settings.json</span>
+          </div>
+          <div id="native-card" class="item-row dashed" style="margin-bottom:8px;"></div>
+          <div id="profile-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3 data-i18n="autoFailover">Automatic Failover</h3>
+            <button class="btn btn-primary" id="fo-use" data-i18n="useFailover">Use Failover</button>
+          </div>
+          <div id="fo-chain"></div>
+          <div class="inline-fields">
+            <div class="form-group"><label for="fo-port" data-i18n="proxyPort">Proxy port</label><input type="number" id="fo-port" min="1024" max="65535"></div>
+            <div class="form-group"><label for="fo-cool" data-i18n="cooldownSecs">Cooldown (s)</label><input type="number" id="fo-cool" min="5" max="3600"></div>
+            <button class="btn" id="fo-save" data-i18n="saveChain">Save Chain</button>
+          </div>
+          <div class="status-box" id="fo-status"></div>
+        </div>
+      </section>
+
+      <!-- ============ 3. ANTIGRAVITY ============ -->
+      <section class="pane" id="pane-antigravity">
+        <div class="page-head">
+          <div>
+            <h2>Gemini Antigravity</h2>
+            <div class="sub" data-i18n="agSub">Multi-account switching & live Gemini / Claude / GPT quotas</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-primary" id="ag-capture" data-i18n="agCaptureBtn">Capture Current</button>
+            <button class="btn" id="ag-new-slot" data-i18n="agNewSlotBtn">+ Declare</button>
+            <button class="btn" id="ag-add-another" data-i18n="agAddAnotherBtn">Add Another</button>
+            <button class="btn" id="ag-next" data-i18n="agNextBtn">Next</button>
+            <button class="btn" id="ag-open" data-i18n="agOpenBtn">Open App</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3 data-i18n="agQuotaTitle">Antigravity Quota</h3>
+            <button class="btn" id="ag-quota-btn"></button>
+          </div>
+          <div id="ag-quota-box"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3 data-i18n="agLocalTitle">Local Sign-in</h3>
+            <span class="hint">Keychain & state.vscdb</span>
+          </div>
+          <div id="ag-current" class="item-row dashed"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3 data-i18n="agDeclaredTitle">Declared Accounts</h3>
+            <span class="hint">antigravity.json</span>
+          </div>
+          <div id="ag-list"></div>
+        </div>
+      </section>
+
+      <!-- ============ 4. BACKUP & IMPORT ============ -->
+      <section class="pane" id="pane-backup">
+        <div class="page-head">
+          <div>
+            <h2>Backup & Import</h2>
+            <div class="sub" data-i18n="backupSub">Backup & restore Profiles, Failover, Antigravity, Settings & 90-day Usage</div>
+          </div>
+        </div>
+
+        <div class="split2">
+          <div class="card">
+            <div class="card-head"><h3 data-i18n="exportTitle">Export Backup</h3></div>
+            <label class="check-line">
+              <input type="checkbox" id="bk-include-secrets">
+              <div>
+                <div style="font-weight:600;" data-i18n="includeSecretsLbl">Include API tokens & login sessions</div>
+                <div class="hint" data-i18n="includeSecretsHint">Off by default for safe sharing; when enabled, saved with 0600 permissions.</div>
+              </div>
+            </label>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+              <button class="btn btn-primary" id="bk-export-btn" data-i18n="exportFileBtn">Export (.json)…</button>
+              <button class="btn" id="bk-snap-btn" data-i18n="createSnapBtn">Create Snapshot</button>
+            </div>
+            <div id="bk-export-res"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3 data-i18n="importTitle">Import Data</h3></div>
+            <div class="form-group">
+              <label data-i18n="importModeLbl">Import mode (auto-detects Backup / profiles.json / antigravity.json)</label>
+              <div class="seg" id="seg-import-mode">
+                <button data-mode="merge" aria-pressed="true" data-i18n="modeMerge">Merge</button>
+                <button data-mode="replace" aria-pressed="false" data-i18n="modeReplace">Replace</button>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="bk-import-btn" data-i18n="chooseJsonBtn">Choose JSON File…</button>
+            <div id="bk-import-res"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>Local Snapshots</h3>
+            <button class="btn" id="bk-reload-snaps"></button>
+          </div>
+          <div id="bk-snaps-wrap"></div>
+        </div>
+      </section>
+
+      <!-- ============ 5. SETTINGS ============ -->
+      <section class="pane" id="pane-settings">
+        <div class="page-head">
+          <div>
+            <h2 data-i18n="settingsTitle">Settings</h2>
+            <div class="sub" data-i18n="settingsSub">Appearance, language, privacy & two-way workspace sync</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3 data-i18n="displayPrivacyTitle">Display & Privacy</h3></div>
+          <div class="grid3">
+            <div class="form-group">
+              <label data-i18n="langLabel">Language</label>
+              <div class="seg" id="seg-lang">
+                <button data-lang="en" aria-pressed="true">English</button>
+                <button data-lang="vi" aria-pressed="false">Tiếng Việt</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label data-i18n="themeLabel">Theme</label>
+              <div class="seg" id="seg-theme">
+                <button data-theme="system" aria-pressed="true" data-i18n="themeSystem">System</button>
+                <button data-theme="dark" aria-pressed="false" data-i18n="themeDark">Dark</button>
+                <button data-theme="light" aria-pressed="false" data-i18n="themeLight">Light</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label data-i18n="quotaStyleLabel">Quota Style</label>
+              <div class="seg" id="seg-pct">
+                <button data-pct="left" aria-pressed="true" data-i18n="pctLeft">% left</button>
+                <button data-pct="used" aria-pressed="false" data-i18n="pctUsed">% used</button>
+              </div>
+            </div>
+          </div>
+          <label class="check-line">
+            <input type="checkbox" id="set-privacy">
+            <div>
+              <div style="font-weight:600;" data-i18n="privacyCheckTitle">Mask sensitive data with *** (key P)</div>
+              <div class="hint" data-i18n="privacyCheckHint">Masks emails, organizations, and gateway URLs with ***.</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3 data-i18n="syncTitle">Workspace Sync</h3></div>
+          <div class="form-group">
+            <label for="set-profiles-path"><span data-i18n="syncFilePrefix">Sync file</span> <code>profiles.json</code></label>
+            <div class="path-row">
+              <input type="text" id="set-profiles-path" placeholder="Auto-detect in workspace">
+              <button class="btn" id="pick-profiles-path" data-i18n="browseBtn">Browse…</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="set-ag-path"><span data-i18n="syncFilePrefix">Sync file</span> <code>antigravity.json</code></label>
+            <div class="path-row">
+              <input type="text" id="set-ag-path" placeholder="Auto-detect in workspace">
+              <button class="btn" id="pick-ag-path" data-i18n="browseBtn">Browse…</button>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;">
+            <button class="btn btn-primary" id="set-save-btn" data-i18n="saveSettingsBtn">Save Settings</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div id="dash-toast" class="dash-toast"></div>
+
+<!-- Antigravity Modal -->
+<div id="ag-modal" class="modal">
+  <div class="modal-content" role="dialog" aria-labelledby="ag-modal-title">
+    <h2 id="ag-modal-title">Antigravity Account</h2>
+    <div class="grid2">
+      <div class="form-group"><label for="ag-key">Key</label><input type="text" id="ag-key" placeholder="e.g. PRO-01"></div>
+      <div class="form-group"><label for="ag-label" data-i18n="displayNameLbl">Display Name</label><input type="text" id="ag-label" placeholder="Label"></div>
+    </div>
+    <div class="form-group"><label for="ag-email">Google Email</label><input type="text" id="ag-email" placeholder="user@gmail.com"></div>
+    <div class="form-group"><label for="ag-notes" data-i18n="notesLbl">Notes</label><textarea id="ag-notes" class="small"></textarea></div>
+    <div class="actions">
+      <button class="btn" id="ag-cancel" data-i18n="cancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="ag-save" data-i18n="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Claude Profile Modal -->
+<div id="add-modal" class="modal">
+  <div class="modal-content" role="dialog" aria-labelledby="modal-title">
+    <h2 id="modal-title">Add Profile</h2>
+    <div class="grid2">
+      <div class="form-group"><label for="new-key">Key</label><input type="text" id="new-key" placeholder="e.g. gateway-1"></div>
+      <div class="form-group"><label for="new-name" data-i18n="displayNameLbl">Display Name</label><input type="text" id="new-name" placeholder="Name"></div>
+    </div>
+    <div class="form-group"><label for="new-url">Base URL</label><input type="text" id="new-url" placeholder="https://..."></div>
+    <div class="form-group"><label for="new-token">API Token</label><input type="password" id="new-token" placeholder="sk-..." autocomplete="off"></div>
+
+    <div class="section">
+      <div class="section-head">
+        <h3>Models</h3>
+        <button class="btn" id="fill-latest" data-i18n="fillLatestBtn">Fill Latest Claude</button>
+      </div>
+      <label for="m-prefix" data-i18n="vendorPrefixLbl">Vendor / gateway prefix</label>
+      <div class="chips" id="prefix-chips">
+        <button class="chip" data-prefix="" data-i18n="prefixNone">None</button>
+        <button class="chip" data-prefix="cc/">cc/</button>
+        <button class="chip" data-prefix="anthropic/">anthropic/</button>
+        <button class="chip" data-prefix="anthropic.">anthropic.</button>
+        <button class="chip" data-prefix="global.anthropic.">global.anthropic.</button>
+      </div>
+      <input type="text" id="m-prefix" placeholder="Leave empty or enter custom prefix">
+      <div style="height:10px"></div>
+      <div id="model-rows"></div>
+      <details style="margin-top:4px;">
+        <summary style="cursor:pointer;color:var(--muted);" data-i18n="extraEnvLbl">Extra environment variables</summary>
+        <textarea id="m-extra" placeholder="KEY=VALUE, one per line"></textarea>
+      </details>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="cancel-btn" data-i18n="cancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" data-i18n="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="claude-models">
+  <option value="claude-opus-5-5"></option>
+  <option value="claude-fable-5-2"></option>
+  <option value="claude-sonnet-5-5"></option>
+  <option value="claude-haiku-5-5"></option>
+  <option value="claude-opus-5"></option>
+  <option value="claude-sonnet-5"></option>
+  <option value="claude-sonnet-4-6"></option>
+</datalist>
+<datalist id="claude-aliases">
+  <option value="opus"></option>
+  <option value="sonnet"></option>
+  <option value="haiku"></option>
+</datalist>
+
+<script>
+const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const I18N = {
+  en: {
+    navSettings: 'Settings',
+    masked: 'Masked',
+    visible: 'Visible',
+    refresh: 'Refresh',
+    reload: 'Reload',
+    usageSub: 'Tokens, estimated API spend & live quotas',
+    provAll: 'All',
+    days7: '7 days',
+    days30: '30 days',
+    metricTotal: 'Total',
+    loadingUsage: 'Loading usage data…',
+    byProviderTitle: 'Quota & Spend by Provider',
+    topModelsTitle: 'Top Models (30d)',
+    estUsd: 'Est. USD',
+    claudeSub: 'Gateway profiles, model prefixes & automatic failover',
+    addProfileBtn: '+ Add Profile',
+    removeAllBtn: 'Remove All',
+    clQuotaTitle: 'Claude Quota',
+    checkKeychainBtn: 'Check (Keychain)',
+    nativeAndProfiles: 'Native Account & Profiles',
+    autoFailover: 'Automatic Failover',
+    useFailover: 'Use Failover',
+    inUse: 'Active',
+    proxyPort: 'Proxy port',
+    cooldownSecs: 'Cooldown (s)',
+    saveChain: 'Save Chain',
+    agSub: 'Multi-account switching & live Gemini / Claude / GPT quotas',
+    agCaptureBtn: 'Capture Current',
+    agNewSlotBtn: '+ Declare',
+    agAddAnotherBtn: 'Add Another',
+    agNextBtn: 'Next',
+    agOpenBtn: 'Open App',
+    agQuotaTitle: 'Antigravity Quota',
+    agLocalTitle: 'Local Sign-in',
+    agDeclaredTitle: 'Declared Accounts',
+    backupSub: 'Backup & restore Profiles, Failover, Antigravity, Settings & 90-day Usage',
+    exportTitle: 'Export Backup',
+    includeSecretsLbl: 'Include API tokens & login sessions',
+    includeSecretsHint: 'Off by default for safe sharing; when enabled, saved with 0600 permissions.',
+    exportFileBtn: 'Export (.json)…',
+    createSnapBtn: 'Create Snapshot',
+    importTitle: 'Import Data',
+    importModeLbl: 'Import mode (auto-detects Backup / profiles.json / antigravity.json)',
+    modeMerge: 'Merge',
+    modeReplace: 'Replace',
+    chooseJsonBtn: 'Choose JSON File…',
+    settingsTitle: 'Settings',
+    settingsSub: 'Appearance, language, privacy & two-way workspace sync',
+    displayPrivacyTitle: 'Display & Privacy',
+    langLabel: 'Language',
+    themeLabel: 'Theme',
+    themeSystem: 'System',
+    themeDark: 'Dark',
+    themeLight: 'Light',
+    quotaStyleLabel: 'Quota Style',
+    pctLeft: '% left',
+    pctUsed: '% used',
+    privacyCheckTitle: 'Mask sensitive data with *** (key P)',
+    privacyCheckHint: 'Masks emails, organizations, and gateway URLs with ***.',
+    syncTitle: 'Workspace Sync',
+    syncFilePrefix: 'Sync file',
+    autoDetectPh: 'Auto-detect in workspace',
+    browseBtn: 'Browse…',
+    saveSettingsBtn: 'Save Settings',
+    displayNameLbl: 'Display Name',
+    notesLbl: 'Notes',
+    cancelBtn: 'Cancel',
+    saveBtn: 'Save',
+    fillLatestBtn: 'Fill Latest Claude',
+    vendorPrefixLbl: 'Vendor / gateway prefix',
+    prefixNone: 'None',
+    customPrefixPh: 'Leave empty or enter custom prefix',
+    extraEnvLbl: 'Extra environment variables',
+    extraEnvPh: 'KEY=VALUE, one per line',
+    paceOn: 'On pace',
+    paceReserve: '{n}% in reserve',
+    paceDeficit: '{n}% over pace',
+    usedWord: 'used',
+    leftWord: 'left',
+    planWord: 'Plan',
+    noClOauth: 'No Claude OAuth quota data yet.',
+    agQuotaPrompt: 'Click <b>Refresh</b> to load Antigravity quotas (Gemini Models & Claude/GPT).',
+    accountWord: 'Account',
+    otherModel: 'Other',
+    totalTokTile: 'Total tokens ({d}d)',
+    todayWord: 'Today',
+    estCostTile: 'Est. Cost (30d)',
+    estApiSub: 'API estimate',
+    responsesTile: 'Responses',
+    noUsageDays: 'No activity in the last {d} days',
+    noActivity: 'No activity',
+    totalWord: 'Total',
+    turns30d: '{n} turns',
+    noData: 'No data yet.',
+    usageReadErr: 'Failed to load usage: ',
+    notSignedIn: 'Not signed in',
+    signedIn: 'Signed in',
+    noProfiles: 'No profiles configured yet.',
+    useBtn: 'Use',
+    editBtn: 'Edit',
+    deleteBtn: 'Delete',
+    restoreBtn: 'Restore',
+    confirmDelProfile: 'Delete profile "{n}"?',
+    confirmRemoveAll: 'Remove all profiles and restore native Claude login?',
+    addProfileTitle: 'Add Profile',
+    editProfileTitle: 'Edit "{n}"',
+    keepTokenPh: '*** (leave blank to keep existing)',
+    notClaudeWarn: 'Not a Claude model',
+    diffFamilyWarn: 'Different family',
+    reqProfileFields: 'Please enter Key, Name, and Base URL',
+    reqTokenField: 'Please enter an API Token',
+    badEnvLine: 'Invalid line: "{t}"',
+    dupEnvField: '{k} already has a dedicated input',
+    need2ProfilesFo: 'Add at least 2 profiles to configure failover.',
+    proxyRunning: 'Running',
+    proxyOff: 'Proxy stopped.',
+    lastUsed: 'Last routed',
+    coolingDown: 'Cooling down',
+    confirm1Fo: 'Chain only has 1 profile. Save anyway?',
+    saveChainFirst: 'Click "Save Chain" first.',
+    unsavedPill: 'not captured',
+    confirmCloseReopen: '{apps} will close and reopen. Continue?',
+    confirmClearAg: 'Sign out Antigravity, IDE, and Gemini CLI on this Mac? (Saved vault accounts remain intact.)',
+    confirmRestoreAg: 'Restore original Antigravity login?',
+    noAgAccounts: 'No accounts declared yet.',
+    savedOn: 'saved {d}',
+    notCaptured: 'not captured',
+    saveHereBtn: 'Capture Here',
+    confirmDelAg: 'Delete "{n}"?',
+    editAgTitle: 'Edit Account',
+    declareAgTitle: 'Declare Account',
+    reqKey: 'Please enter a Key',
+    confirmAddAnother: 'Save current session, sign out locally, and open Antigravity to sign in with a new account?',
+    exportedBanner: '✓ Exported ({s}) to <code>{p}</code>',
+    snapCreatedBanner: '✓ Snapshot created: <code>{f}</code>',
+    confirmReplaceImport: 'Overwrite all current data? (A pre-import safety snapshot is created automatically.)',
+    importedBanner: '✓ Imported ({f} · {m}). Safety snapshot: <code>{s}</code>',
+    noSnapshots: 'No local snapshots yet.',
+    thFile: 'File',
+    thTime: 'Time',
+    thData: 'Contents',
+    thSecrets: 'Secrets',
+    thSize: 'Size',
+    hiddenWord: 'Redacted',
+    confirmRestoreSnap: 'Restore data from this snapshot?',
+    confirmDelSnap: 'Delete {f}?',
+    toastSyncSaved: 'Sync settings saved',
+    toastQuotaUpdated: 'Quotas updated',
+    toastNativeRestored: 'Restored Native Claude',
+    toastSwitchedTo: 'Switched to {n}',
+    toastProfileDeleted: 'Profile deleted',
+    toastProfileSaved: 'Profile saved',
+    toastImported: 'Imported successfully',
+    toastAllRemoved: 'Removed all profiles',
+    toastFoSaved: 'Failover chain saved',
+    toastFoEnabled: 'Automatic failover enabled',
+    toastAgSwitched: 'Switched Antigravity account',
+    toastAgCleared: 'Cleared local sign-in',
+    toastAgRestored: 'Restored original login',
+    toastCaptured: 'Session captured',
+    toastAccDeleted: 'Account deleted',
+    toastAccSaved: 'Antigravity account saved',
+    toastOpeningAg: 'Opening Antigravity…',
+    toastSignNewAg: 'Sign into the new account in Antigravity, then click Capture Current',
+    toastExported: 'Backup exported',
+    toastSnapCreated: 'Snapshot created',
+    toastSnapRestored: 'Snapshot restored',
+    toastSnapDeleted: 'Snapshot deleted',
+    subHard: 'complex tasks',
+    subDaily: 'daily coding',
+    subBg: 'background',
+    subOpt: 'optional',
+    defaultPh: 'default',
+  },
+  vi: {
+    navSettings: 'Cài đặt',
+    masked: 'Đang che',
+    visible: 'Đang hiện',
+    refresh: 'Làm mới',
+    reload: 'Tải lại',
+    usageSub: 'Token, chi phí ước tính & hạn mức live',
+    provAll: 'Tất cả',
+    days7: '7 ngày',
+    days30: '30 ngày',
+    metricTotal: 'Tổng',
+    loadingUsage: 'Đang đọc dữ liệu…',
+    byProviderTitle: 'Hạn mức & Chi tiêu theo Provider',
+    topModelsTitle: 'Top Models (30 ngày)',
+    estUsd: 'Ước tính USD',
+    claudeSub: 'Chuyển đổi gateway, model prefix & failover tự động',
+    addProfileBtn: '+ Thêm profile',
+    removeAllBtn: 'Xoá tất cả',
+    clQuotaTitle: 'Hạn mức Claude',
+    checkKeychainBtn: 'Kiểm tra (Keychain)',
+    nativeAndProfiles: 'Tài khoản gốc & Profiles',
+    autoFailover: 'Failover tự động',
+    useFailover: 'Dùng failover',
+    inUse: 'Đang dùng',
+    proxyPort: 'Cổng proxy',
+    cooldownSecs: 'Chờ lỗi (s)',
+    saveChain: 'Lưu chuỗi',
+    agSub: 'Chuyển đổi tài khoản & theo dõi hạn mức Gemini / Claude / GPT',
+    agCaptureBtn: 'Lưu phiên hiện tại',
+    agNewSlotBtn: '+ Khai báo',
+    agAddAnotherBtn: 'Thêm tài khoản khác',
+    agNextBtn: 'Kế tiếp',
+    agOpenBtn: 'Mở App',
+    agQuotaTitle: 'Hạn mức Antigravity',
+    agLocalTitle: 'Đăng nhập trên máy',
+    agDeclaredTitle: 'Tài khoản đã khai báo',
+    backupSub: 'Sao lưu & khôi phục Profiles, Failover, Antigravity, Cài đặt & Usage 90 ngày',
+    exportTitle: 'Xuất Backup',
+    includeSecretsLbl: 'Kèm API token & phiên đăng nhập',
+    includeSecretsHint: 'Mặc định tắt để bảo mật; khi bật file được đặt quyền 0600.',
+    exportFileBtn: 'Xuất file (.json)…',
+    createSnapBtn: 'Tạo Snapshot',
+    importTitle: 'Nhập dữ liệu',
+    importModeLbl: 'Chế độ nhập (tự nhận diện Backup / profiles.json / antigravity.json)',
+    modeMerge: 'Gộp (Merge)',
+    modeReplace: 'Ghi đè (Replace)',
+    chooseJsonBtn: 'Chọn file JSON…',
+    settingsTitle: 'Cài đặt',
+    settingsSub: 'Giao diện, ngôn ngữ, bảo mật & đồng bộ 2 chiều',
+    displayPrivacyTitle: 'Hiển thị & Bảo mật',
+    langLabel: 'Ngôn ngữ',
+    themeLabel: 'Chủ đề',
+    themeSystem: 'Hệ thống',
+    themeDark: 'Tối',
+    themeLight: 'Sáng',
+    quotaStyleLabel: 'Hiển thị hạn mức',
+    pctLeft: '% còn lại',
+    pctUsed: '% đã dùng',
+    privacyCheckTitle: 'Che dữ liệu nhạy cảm bằng *** (phím P)',
+    privacyCheckHint: 'Che email, tổ chức và đường dẫn gateway bằng ký tự ***.',
+    syncTitle: 'Đồng bộ Workspace',
+    syncFilePrefix: 'File đồng bộ',
+    autoDetectPh: 'Tự tìm trong workspace',
+    browseBtn: 'Chọn…',
+    saveSettingsBtn: 'Lưu cài đặt',
+    displayNameLbl: 'Tên hiển thị',
+    notesLbl: 'Ghi chú',
+    cancelBtn: 'Huỷ',
+    saveBtn: 'Lưu',
+    fillLatestBtn: 'Dùng Claude mới nhất',
+    vendorPrefixLbl: 'Tiền tố hãng / gateway',
+    prefixNone: 'Không',
+    customPrefixPh: 'Để trống hoặc nhập tiền tố riêng',
+    extraEnvLbl: 'Biến môi trường khác',
+    extraEnvPh: 'KEY=VALUE, mỗi dòng một biến',
+    paceOn: 'Đúng nhịp',
+    paceReserve: 'Dư {n}%',
+    paceDeficit: 'Vượt {n}%',
+    usedWord: 'đã dùng',
+    leftWord: 'còn lại',
+    planWord: 'Gói',
+    noClOauth: 'Chưa có dữ liệu Claude OAuth.',
+    agQuotaPrompt: 'Bấm <b>Làm mới</b> để đọc hạn mức Antigravity (Gemini Models & Claude/GPT).',
+    accountWord: 'Tài khoản',
+    otherModel: 'Khác',
+    totalTokTile: 'Tổng token ({d}d)',
+    todayWord: 'Hôm nay',
+    estCostTile: 'Chi phí (30d)',
+    estApiSub: 'Ước tính API',
+    responsesTile: 'Lượt trả lời',
+    noUsageDays: 'Chưa có dữ liệu trong {d} ngày qua',
+    noActivity: 'Không có hoạt động',
+    totalWord: 'Tổng',
+    turns30d: '{n} lượt',
+    noData: 'Chưa có dữ liệu.',
+    usageReadErr: 'Không đọc được dữ liệu: ',
+    notSignedIn: 'Chưa đăng nhập',
+    signedIn: 'Đã đăng nhập',
+    noProfiles: 'Chưa có profile nào.',
+    useBtn: 'Dùng',
+    editBtn: 'Sửa',
+    deleteBtn: 'Xoá',
+    restoreBtn: 'Khôi phục',
+    confirmDelProfile: 'Xoá profile "{n}"?',
+    confirmRemoveAll: 'Xoá toàn bộ profile và khôi phục login Claude gốc?',
+    addProfileTitle: 'Thêm profile',
+    editProfileTitle: 'Sửa "{n}"',
+    keepTokenPh: '*** (để trống = giữ nguyên)',
+    notClaudeWarn: 'Không phải model Claude',
+    diffFamilyWarn: 'Khác dòng',
+    reqProfileFields: 'Vui lòng nhập Key, Tên và Base URL',
+    reqTokenField: 'Vui lòng nhập API Token',
+    badEnvLine: 'Dòng không hợp lệ: "{t}"',
+    dupEnvField: '{k} đã có ô nhập riêng',
+    need2ProfilesFo: 'Thêm ít nhất 2 profile để dùng failover.',
+    proxyRunning: 'Đang hoạt động',
+    proxyOff: 'Proxy tắt.',
+    lastUsed: 'Gần nhất',
+    coolingDown: 'Tạm bỏ qua',
+    confirm1Fo: 'Chuỗi chỉ có 1 profile. Vẫn lưu?',
+    saveChainFirst: 'Bấm "Lưu chuỗi" trước.',
+    unsavedPill: 'chưa lưu',
+    confirmCloseReopen: '{apps} sẽ được đóng và mở lại. Tiếp tục?',
+    confirmClearAg: 'Đăng xuất Antigravity, IDE và Gemini CLI trên máy? (Tài khoản đã lưu vẫn giữ nguyên.)',
+    confirmRestoreAg: 'Khôi phục đăng nhập Antigravity ban đầu?',
+    noAgAccounts: 'Chưa khai báo tài khoản nào.',
+    savedOn: 'đã lưu {d}',
+    notCaptured: 'chưa lưu phiên',
+    saveHereBtn: 'Lưu vào đây',
+    confirmDelAg: 'Xoá "{n}"?',
+    editAgTitle: 'Sửa tài khoản',
+    declareAgTitle: 'Khai báo tài khoản',
+    reqKey: 'Vui lòng nhập Key',
+    confirmAddAnother: 'Lưu phiên hiện tại, đăng xuất trên máy, rồi mở Antigravity để đăng nhập tài khoản mới?',
+    exportedBanner: '✓ Đã xuất ({s}) tới <code>{p}</code>',
+    snapCreatedBanner: '✓ Đã tạo snapshot: <code>{f}</code>',
+    confirmReplaceImport: 'Ghi đè toàn bộ dữ liệu hiện tại? (Hệ thống tự tạo snapshot pre-import trước.)',
+    importedBanner: '✓ Import xong ({f} · {m}). Snapshot an toàn: <code>{s}</code>',
+    noSnapshots: 'Chưa có snapshot cục bộ.',
+    thFile: 'File',
+    thTime: 'Thời gian',
+    thData: 'Dữ liệu',
+    thSecrets: 'Bí mật',
+    thSize: 'Cỡ',
+    hiddenWord: 'Đã ẩn',
+    confirmRestoreSnap: 'Khôi phục dữ liệu từ snapshot này?',
+    confirmDelSnap: 'Xoá {f}?',
+    toastSyncSaved: 'Đã lưu cài đặt đồng bộ',
+    toastQuotaUpdated: 'Đã cập nhật hạn mức',
+    toastNativeRestored: 'Đã chuyển về Claude Native',
+    toastSwitchedTo: 'Đã chuyển sang {n}',
+    toastProfileDeleted: 'Đã xoá profile',
+    toastProfileSaved: 'Đã lưu profile',
+    toastImported: 'Import dữ liệu thành công',
+    toastAllRemoved: 'Đã xoá toàn bộ profile',
+    toastFoSaved: 'Đã lưu chuỗi failover',
+    toastFoEnabled: 'Đã bật Failover tự động',
+    toastAgSwitched: 'Đã chuyển tài khoản Antigravity',
+    toastAgCleared: 'Đã xoá phiên đăng nhập trên máy',
+    toastAgRestored: 'Đã khôi phục phiên gốc',
+    toastCaptured: 'Đã lưu phiên hiện tại',
+    toastAccDeleted: 'Đã xoá tài khoản',
+    toastAccSaved: 'Đã lưu tài khoản Antigravity',
+    toastOpeningAg: 'Đang mở Antigravity…',
+    toastSignNewAg: 'Hãy đăng nhập tài khoản mới trong Antigravity rồi bấm Lưu phiên',
+    toastExported: 'Đã xuất file backup',
+    toastSnapCreated: 'Đã tạo snapshot',
+    toastSnapRestored: 'Đã khôi phục snapshot',
+    toastSnapDeleted: 'Đã xoá snapshot',
+    subHard: 'tác vụ khó',
+    subDaily: 'code hằng ngày',
+    subBg: 'tác vụ nền',
+    subOpt: 'tuỳ chọn',
+    defaultPh: 'mặc định',
+  },
+};
+
+const ICO = {
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg>',
+  terminal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
+  layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+  archive: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  sliders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+};
+
+const SECTIONS = ['usage', 'claude', 'antigravity', 'backup', 'settings'];
+const FAILOVER_KEY = '__failover__';
+const SLOTS = ['--s1', '--s2', '--s3', '--s4', '--s5'];
+
+let currentSection = 'usage';
+let prefs = { language: 'en', theme: 'system', percentStyle: 'left', privacyMode: true, profilesSyncPath: '', antigravitySyncPath: '' };
+let quotaCache = { antigravity: {}, claude: null };
+let rawUsage = null, usage = null, metric = 'total', rangeDays = 30, provFilter = 'all', lastUsageAt = 0;
+let profilesCache = {}, editingKey = null, activeKey = '', foChain = [], foDirty = false;
+let agStatus = null, agEditing = null, agBusy = false, importMode = 'merge';
+
+const lang = () => prefs.language === 'vi' ? 'vi' : 'en';
+const localeTag = () => lang() === 'vi' ? 'vi-VN' : 'en-US';
+const tr = (k, vars = {}) => {
+  let s = I18N[lang()][k] ?? I18N.en[k] ?? k;
+  for (const [vk, vv] of Object.entries(vars)) s = s.replace(`{${vk}}`, vv);
+  return s;
+};
+
+function showToast(msg) {
+  const el = $('dash-toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function maskEmail(v) {
+  if (!v) return '';
+  if (!prefs.privacyMode) return v;
+  const i = v.indexOf('@');
+  if (i < 0) return v.length <= 2 ? '***' : v.slice(0, 2) + '***';
+  const local = v.slice(0, i), dom = v.slice(i + 1);
+  return (local.length <= 2 ? local[0] || '' : local.slice(0, 3)) + '***@' + dom;
+}
+function maskUrl(u) {
+  if (!u) return '';
+  if (!prefs.privacyMode) return u;
+  try {
+    const parsed = new URL(u);
+    const parts = parsed.hostname.split('.');
+    const host = parts.length > 1 ? `***.${parts.slice(-1)[0]}` : '***';
+    return `${parsed.protocol}//${host}`;
+  } catch { return '***'; }
+}
+const maskText = (t) => !t ? '' : (prefs.privacyMode ? '***' : t);
+const maskLabel = (label, email) => (prefs.privacyMode && email && label === email) ? maskEmail(label) : label;
+
+const fmt = (n) => {
+  const a = Math.abs(Number(n) || 0);
+  if (a >= 1e9) return (n / 1e9).toFixed(a >= 1e10 ? 0 : 1).replace(/\.0$/, '') + 'B';
+  if (a >= 1e6) return (n / 1e6).toFixed(a >= 1e7 ? 0 : 1).replace(/\.0$/, '') + 'M';
+  if (a >= 1e3) return (n / 1e3).toFixed(a >= 1e4 ? 0 : 1).replace(/\.0$/, '') + 'K';
+  return String(Math.round(n || 0));
+};
+const full = (n) => (Number(n) || 0).toLocaleString(localeTag());
+const fmtUsd = (n) => '$' + (Number(n) || 0).toFixed(2);
+const fmtBytes = (b) => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : b >= 1024 ? (b / 1024).toFixed(1) + ' KB' : b + ' B';
+const fmtDate = (sec) => sec ? new Date(sec * 1000).toLocaleString(localeTag()) : '—';
+const fmtTime = (sec) => new Date(sec * 1000).toLocaleTimeString(localeTag());
+const fmtReset = (unix) => {
+  if (!unix) return '';
+  const diff = Math.max(0, unix - Math.floor(Date.now() / 1000));
+  if (diff <= 0) return '';
+  const d = Math.floor(diff / 86400), h = Math.floor((diff % 86400) / 3600), m = Math.floor((diff % 3600) / 60);
+  if (d > 0) return `reset ${d}d ${h}h`;
+  if (h > 0) return `reset ${h}h ${m}m`;
+  return `reset ${Math.max(1, m)}m`;
+};
+const barColor = (rem, defColor) => rem <= 15 ? 'var(--danger)' : rem <= 35 ? 'var(--warn)' : defColor;
+
+function initNavIcons() {
+  const clCnt = $('nav-cl-count')?.textContent || '0';
+  const agCnt = $('nav-ag-count')?.textContent || '0';
+  $('nav-usage').innerHTML = `${ICO.chart}<span>Usage</span>`;
+  $('nav-claude').innerHTML = `${ICO.terminal}<span>Claude</span><span class="nav-count" id="nav-cl-count">${clCnt}</span>`;
+  $('nav-antigravity').innerHTML = `${ICO.layers}<span>Antigravity</span><span class="nav-count" id="nav-ag-count">${agCnt}</span>`;
+  $('nav-backup').innerHTML = `${ICO.archive}<span>Backup</span>`;
+  $('nav-settings').innerHTML = `${ICO.sliders}<span>${esc(tr('navSettings'))}</span>`;
+  $('sb-refresh-quota').innerHTML = `${ICO.refresh}<span>Quota</span>`;
+  $('dash-refresh-q').innerHTML = `${ICO.refresh}<span>${esc(tr('refresh'))}</span>`;
+  $('ag-quota-btn').innerHTML = `${ICO.refresh}<span>${esc(tr('refresh'))}</span>`;
+  $('bk-reload-snaps').innerHTML = `${ICO.refresh}<span>${esc(tr('reload'))}</span>`;
+}
+
+// ---------- Profile Editor Fields ----------
+const MODEL_FIELDS = [
+  { id: 'opus',     env: 'ANTHROPIC_DEFAULT_OPUS_MODEL',   label: 'Opus',     subKey: 'subHard',  list: 'claude-models',  latest: 'claude-opus-5-5',   family: 'opus' },
+  { id: 'sonnet',   env: 'ANTHROPIC_DEFAULT_SONNET_MODEL', label: 'Sonnet',   subKey: 'subDaily', list: 'claude-models',  latest: 'claude-sonnet-5-5', family: 'sonnet' },
+  { id: 'haiku',    env: 'ANTHROPIC_DEFAULT_HAIKU_MODEL',  label: 'Haiku',    subKey: 'subBg',    list: 'claude-models',  latest: 'claude-haiku-5-5',  family: 'haiku' },
+  { id: 'main',     env: 'ANTHROPIC_MODEL',                label: 'Main',     subKey: 'subOpt',   list: 'claude-aliases' },
+  { id: 'subagent', env: 'CLAUDE_CODE_SUBAGENT_MODEL',     label: 'Subagent', subKey: 'subOpt',   list: 'claude-aliases' },
+];
+const FORM_ENV = new Set(['ANTHROPIC_BASE_URL', 'ANTHROPIC_AUTH_TOKEN', ...MODEL_FIELDS.map(f => f.env)]);
+
+function buildModelRows() {
+  const savedVals = {};
+  for (const f of MODEL_FIELDS) { const el = $('m-' + f.id); if (el) savedVals[f.id] = el.value; }
+  $('model-rows').innerHTML = MODEL_FIELDS.map(f => `
+    <div class="model-row">
+      <label for="m-${f.id}">${f.label}<small>${esc(tr(f.subKey))}</small></label>
+      <input type="text" id="m-${f.id}" list="${f.list}" placeholder="${esc(f.latest || tr('defaultPh'))}" autocomplete="off" spellcheck="false">
+      <div class="resolved" id="r-${f.id}"></div>
+    </div>`).join('');
+  MODEL_FIELDS.forEach(f => {
+    const el = $('m-' + f.id);
+    if (savedVals[f.id]) el.value = savedVals[f.id];
+    el.addEventListener('input', updateResolved);
+  });
+}
+
+function applyI18nDOM() {
+  document.documentElement.lang = lang();
+  initNavIcons();
+  $('sb-lang').textContent = lang().toUpperCase();
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = tr(el.dataset.i18n);
+  });
+  $('set-profiles-path').placeholder = tr('autoDetectPh');
+  $('set-ag-path').placeholder = tr('autoDetectPh');
+  $('m-prefix').placeholder = tr('customPrefixPh');
+  $('m-extra').placeholder = tr('extraEnvPh');
+  buildModelRows();
+}
+
+// ---------- navigation ----------
+function switchSection(sec) {
+  if (!SECTIONS.includes(sec)) sec = 'usage';
+  currentSection = sec;
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.section === sec));
+  document.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + sec));
+  if (sec === 'usage') {
+    loadUsage(false);
+    if (usage?.models?.length) requestAnimationFrame(() => renderChart(true));
+  } else if (sec === 'claude') {
+    loadFailover(false);
+  } else if (sec === 'antigravity') {
+    loadAntigravity(true);
+  } else if (sec === 'backup') {
+    loadSnapshots();
+  }
+}
+document.querySelectorAll('.nav-item').forEach(b => b.onclick = () => switchSection(b.dataset.section));
+
+// ---------- preferences ----------
+let appliedLang = null;
+function applyPrefs() {
+  const t = prefs.theme || 'system';
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+  const l = lang();
+  if (appliedLang !== l) {
+    appliedLang = l;
+    applyI18nDOM();
+  }
+  $('set-privacy').checked = !!prefs.privacyMode;
+  $('sb-privacy').innerHTML = `${prefs.privacyMode ? ICO.eyeOff : ICO.eye}<span>${esc(prefs.privacyMode ? tr('masked') : tr('visible'))}</span>`;
+  $('set-profiles-path').value = prefs.profilesSyncPath || '';
+  $('set-ag-path').value = prefs.antigravitySyncPath || '';
+  document.querySelectorAll('#seg-lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === l));
+  document.querySelectorAll('#seg-theme button').forEach(b => b.setAttribute('aria-pressed', b.dataset.theme === t));
+  document.querySelectorAll('#seg-pct button').forEach(b => b.setAttribute('aria-pressed', b.dataset.pct === (prefs.percentStyle || 'left')));
+}
+async function loadPreferences() {
+  try { prefs = await invoke('get_preferences'); applyPrefs(); } catch {}
+}
+async function savePrefsNow() {
+  try { await invoke('save_preferences', { prefs }); } catch (e) { alert(e); }
+}
+
+function setLanguage(newLang) {
+  prefs.language = newLang === 'vi' ? 'vi' : 'en';
+  lastFoHtml = '';
+  applyPrefs();
+  if (rawUsage) prepareUsage();
+  refreshViews();
+  if (currentSection === 'backup') loadSnapshots();
+  savePrefsNow();
+}
+
+document.querySelectorAll('#seg-lang button').forEach(b => b.onclick = () => setLanguage(b.dataset.lang));
+$('sb-lang').onclick = () => setLanguage(lang() === 'en' ? 'vi' : 'en');
+document.querySelectorAll('#seg-theme button').forEach(b => b.onclick = () => {
+  prefs.theme = b.dataset.theme; applyPrefs(); savePrefsNow();
+});
+document.querySelectorAll('#seg-pct button').forEach(b => b.onclick = () => {
+  prefs.percentStyle = b.dataset.pct; applyPrefs(); renderQuotasUI(); savePrefsNow();
+});
+$('set-privacy').onchange = () => { prefs.privacyMode = $('set-privacy').checked; applyPrefs(); refreshViews(); savePrefsNow(); };
+$('sb-privacy').onclick = () => { prefs.privacyMode = !prefs.privacyMode; applyPrefs(); refreshViews(); savePrefsNow(); };
+$('pick-profiles-path').onclick = async () => {
+  const p = await invoke('pick_sync_file', { defaultName: 'profiles.json' });
+  if (p) $('set-profiles-path').value = p;
+};
+$('pick-ag-path').onclick = async () => {
+  const p = await invoke('pick_sync_file', { defaultName: 'antigravity.json' });
+  if (p) $('set-ag-path').value = p;
+};
+$('set-save-btn').onclick = async () => {
+  prefs.profilesSyncPath = $('set-profiles-path').value.trim();
+  prefs.antigravitySyncPath = $('set-ag-path').value.trim();
+  await savePrefsNow();
+  await refreshAll();
+  showToast(tr('toastSyncSaved'));
+};
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if ($('add-modal').style.display === 'flex') closeModal();
+    if ($('ag-modal').style.display === 'flex') closeAg();
+    return;
+  }
+  if ((e.metaKey || e.ctrlKey) && !e.altKey) {
+    if (e.key === ',') { e.preventDefault(); switchSection('settings'); return; }
+    if (e.key === 'r' || e.key === 'R') { e.preventDefault(); refreshQuotas(false); loadUsage(true); return; }
+    const n = Number(e.key);
+    if (n >= 1 && n <= SECTIONS.length) { e.preventDefault(); switchSection(SECTIONS[n - 1]); return; }
+  }
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+  if ((e.key === 'p' || e.key === 'P') && !e.metaKey && !e.ctrlKey && !e.altKey) $('sb-privacy').click();
+});
+
+// ---------- Quotas ----------
+function fmtPace(pace) {
+  if (!pace) return '';
+  if (pace.status === 'on_pace') return tr('paceOn');
+  if (pace.status === 'reserve') return tr('paceReserve', { n: Math.abs(Math.round(pace.deltaPercent || 0)) });
+  if (pace.status === 'deficit') return tr('paceDeficit', { n: Math.abs(Math.round(pace.deltaPercent || 0)) });
+  return pace.label || '';
+}
+
+function renderQuotaCard(w, defColor) {
+  const showUsed = prefs.percentStyle === 'used';
+  const pct = showUsed ? w.usedPercent : w.remainingPercent;
+  const color = barColor(w.remainingPercent, defColor);
+  const paceTxt = fmtPace(w.pace);
+  const paceHtml = paceTxt
+    ? `<span class="${w.pace.status === 'reserve' ? 'pace-reserve' : w.pace.status === 'deficit' ? 'pace-deficit' : ''}">${esc(paceTxt)}</span>`
+    : '<span></span>';
+  return `
+    <div class="q-box">
+      <div class="q-top">
+        <span class="q-name">${esc(w.displayName)}</span>
+        <span class="q-pct" style="color:${color}">${pct.toFixed(0)}% ${esc(showUsed ? tr('usedWord') : tr('leftWord'))}</span>
+      </div>
+      <div class="q-bar"><div class="q-fill" style="width:${Math.max(0, Math.min(100, pct))}%;background:${color}"></div></div>
+      <div class="q-meta">
+        <span>${paceHtml}</span>
+        <span>${esc(fmtReset(w.resetUnix))}</span>
+      </div>
+    </div>`;
+}
+
+function activeAgQuotaSnap() {
+  const map = quotaCache?.antigravity || {};
+  return (agStatus?.active && map[agStatus.active]) || map['__current__'] || Object.values(map)[0] || null;
+}
+
+function renderQuotasUI() {
+  const clQ = quotaCache?.claude;
+  const clEl = $('cl-quota-box');
+  if (clEl) {
+    if (clQ?.windows?.length) {
+      clEl.innerHTML = `<div class="q-grid">${clQ.windows.map(w => renderQuotaCard(w, 'var(--claude)')).join('')}</div>`
+        + (clQ.plan ? `<div class="hint" style="margin-top:8px;">${esc(tr('planWord'))}: <b>${esc(clQ.plan)}</b> · ${fmtTime(clQ.updatedAt)}</div>` : '');
+    } else {
+      clEl.innerHTML = `<div class="hint">${esc(tr('noClOauth'))}</div>`;
+    }
+  }
+
+  const agSnap = activeAgQuotaSnap();
+  const agEl = $('ag-quota-box');
+  if (agEl) {
+    if (agSnap?.buckets?.length) {
+      agEl.innerHTML = `<div class="q-grid">${agSnap.buckets.map(w => renderQuotaCard(w, 'var(--ag)')).join('')}</div>`
+        + `<div class="hint" style="margin-top:8px;">${esc(tr('accountWord'))}: <b>${esc(maskEmail(agSnap.email) || maskLabel(agSnap.accountKey, agSnap.email))}</b>${agSnap.plan ? ` · ${esc(agSnap.plan)}` : ''} · ${fmtTime(agSnap.updatedAt)}</div>`;
+    } else {
+      agEl.innerHTML = `<div class="hint">${tr('agQuotaPrompt')}</div>`;
+    }
+  }
+  renderProviderBreakdown();
+}
+
+async function refreshQuotas(allowKeychain = false) {
+  const btns = [$('sb-refresh-quota'), $('dash-refresh-q'), $('ag-quota-btn')];
+  btns.forEach(b => b?.classList.add('spin'));
+  try {
+    quotaCache = await invoke('refresh_all_quotas', { allowKeychain });
+    renderQuotasUI();
+    if (agStatus) loadAntigravity(currentSection === 'antigravity');
+    showToast(tr('toastQuotaUpdated'));
+  } catch (e) { alert(e); }
+  finally { btns.forEach(b => b?.classList.remove('spin')); }
+}
+$('sb-refresh-quota').onclick = () => refreshQuotas(false);
+$('dash-refresh-q').onclick = () => refreshQuotas(false);
+$('cl-quota-btn').onclick = () => refreshQuotas(true);
+$('ag-quota-btn').onclick = () => refreshQuotas(false);
+$('bk-reload-snaps').onclick = () => loadSnapshots();
+
+// ---------- Usage & Spend ----------
+const val = (t) => metric === 'io' ? (t.input || 0) + (t.output || 0) : (t.input || 0) + (t.output || 0) + (t.cacheRead || 0) + (t.cacheWrite || 0);
+const dayLabel = (iso) => { const [, m, d] = iso.split('-'); return lang() === 'vi' ? `${+d}/${+m}` : `${+m}/${+d}`; };
+const color = (name) => `var(${SLOTS[usage.models.indexOf(name)]})`;
+
+function prepareUsage() {
+  if (!rawUsage) return;
+  const otherLbl = tr('otherModel');
+  const srcDays = provFilter === 'claude' ? rawUsage.claudeDays
+    : provFilter === 'antigravity' ? rawUsage.antigravityDays
+    : rawUsage.days;
+  const sliced = (srcDays || []).slice(-rangeDays);
+  const totals = {};
+  for (const d of sliced) for (const [m, t] of Object.entries(d.models || {})) {
+    const acc = totals[m] ||= { input:0, output:0, cacheRead:0, cacheWrite:0, messages:0 };
+    for (const k in acc) acc[k] += t[k] || 0;
+  }
+  const all = Object.keys(totals).sort((a, b) => val(totals[b]) - val(totals[a]));
+  const top = all.slice(0, all.length > SLOTS.length ? SLOTS.length - 1 : SLOTS.length);
+  const fold = (models) => {
+    const out = {};
+    for (const [m, t] of Object.entries(models || {})) {
+      const key = top.includes(m) ? m : otherLbl;
+      const acc = out[key] ||= { input:0, output:0, cacheRead:0, cacheWrite:0, messages:0 };
+      for (const k in acc) acc[k] += t[k] || 0;
+    }
+    return out;
+  };
+  usage = {
+    models: all.length > top.length ? [...top, otherLbl] : top,
+    days: sliced.map(d => ({ date: d.date, models: fold(d.models) })),
+    totals: fold(totals),
+    raw: totals,
+  };
+  renderUsage();
+}
+
+function niceMax(v) {
+  if (v <= 0) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p;
+  return 10 * p;
+}
+
+function renderUsage() {
+  if (!usage) return;
+  const sum = { input:0, output:0, cacheRead:0, cacheWrite:0, messages:0 };
+  for (const t of Object.values(usage.raw)) for (const k in sum) sum[k] += t[k];
+  const today = usage.days[usage.days.length - 1] || { models: {} };
+  const todayVal = Object.values(today.models).reduce((s, t) => s + val(t), 0);
+  const up = rawUsage?.providers || { claude: {}, antigravity: {} };
+  const estCost = provFilter === 'claude' ? up.claude.total30dCost
+    : provFilter === 'antigravity' ? up.antigravity.total30dCost
+    : (up.claude.total30dCost || 0) + (up.antigravity.total30dCost || 0);
+
+  $('tiles').innerHTML = [
+    [metric === 'io' ? `I/O (${rangeDays}d)` : tr('totalTokTile', { d: rangeDays }), fmt(val(sum)), `${full(val(sum))}`],
+    [tr('todayWord'), fmt(todayVal), `${fmtUsd((up.claude.todayCost || 0) + (up.antigravity.todayCost || 0))}`],
+    [tr('estCostTile'), fmtUsd(estCost), tr('estApiSub')],
+    [tr('responsesTile'), fmt(sum.messages), `Output: ${fmt(sum.output)}`],
+  ].map(([l, v, s]) => `<div class="tile"><div class="label">${esc(l)}</div><div class="value">${v}</div><div class="sub">${esc(s)}</div></div>`).join('');
+
+  if (!usage.models.length) {
+    $('usage-empty').textContent = tr('noUsageDays', { d: rangeDays });
+    $('usage-empty').hidden = false;
+    $('chart-wrap').hidden = true;
+    $('legend').innerHTML = '';
+  } else {
+    $('usage-empty').hidden = true;
+    $('chart-wrap').hidden = false;
+    renderChart(true);
+    $('legend').innerHTML = usage.models.map(m =>
+      `<span class="item"><i class="sw" style="background:${color(m)}"></i>${esc(m)} <b>${fmt(val(usage.totals[m]))}</b></span>`).join('');
+  }
+  renderProviderBreakdown();
+  renderTopModels();
+}
+
+let lastChartWidth = 0;
+function renderChart(force = false) {
+  if (!usage?.models?.length) return;
+  const svg = $('chart'), W = svg.clientWidth || 720, H = 185;
+  if (!force && W === lastChartWidth) return;
+  lastChartWidth = W;
+
+  const padL = 42, padR = 6, padT = 8, padB = 22;
+  const pw = W - padL - padR, ph = H - padT - padB;
+  const n = usage.days.length || 1, step = pw / n, bw = Math.max(5, Math.min(24, step - 4));
+  const totals = usage.days.map(d => Object.values(d.models).reduce((s, t) => s + val(t), 0));
+  const yMax = niceMax(Math.max(...totals, 0));
+  const y = (v) => padT + ph - (v / yMax) * ph;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  let out = '';
+  for (let i = 0; i <= 4; i++) {
+    const v = yMax * i / 4, yy = Math.round(y(v)) + 0.5;
+    out += `<line class="${i ? 'grid' : 'base'}" x1="${padL}" x2="${W - padR}" y1="${yy}" y2="${yy}"/>`;
+    if (i % 2 === 0) out += `<text x="${padL - 7}" y="${yy + 4}" text-anchor="end">${fmt(v)}</text>`;
+  }
+  const stride = n <= 10 ? 1 : 7;
+  const todayLbl = esc(tr('todayWord'));
+  usage.days.forEach((d, i) => {
+    const x = padL + i * step + (step - bw) / 2;
+    if ((i % stride === 0 && n - 1 - i >= (n <= 10 ? 1 : 4)) || i === n - 1) {
+      out += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle">${i === n - 1 ? todayLbl : dayLabel(d.date)}</text>`;
+    }
+    let acc = 0, segs = '';
+    const parts = usage.models.map(m => [m, d.models[m] ? val(d.models[m]) : 0]).filter(([, v]) => v > 0);
+    parts.forEach(([m, v], j) => {
+      const y0 = y(acc), y1 = y(acc + v); acc += v;
+      const gap = j > 0 ? 2 : 0, h = Math.max(1, y0 - y1 - gap), top = y1;
+      const r = j === parts.length - 1 ? Math.min(3, h, bw / 2) : 0;
+      segs += r
+        ? `<path fill="${color(m)}" d="M${x},${top + h}V${top + r}q0,-${r} ${r},-${r}H${x + bw - r}q${r},0 ${r},${r}V${top + h}Z"/>`
+        : `<rect fill="${color(m)}" x="${x}" y="${top}" width="${bw}" height="${h}"/>`;
+    });
+    out += `<g class="col" data-i="${i}">${segs}</g>`;
+    out += `<rect class="hit" data-i="${i}" x="${padL + i * step}" y="${padT}" width="${step}" height="${ph}"/>`;
+  });
+  svg.innerHTML = out;
+
+  const tip = $('tip'), wrap = $('chart-wrap');
+  const cols = Array.from(svg.querySelectorAll('.col'));
+  svg.querySelectorAll('.hit').forEach(r => {
+    r.onmouseenter = () => {
+      const i = +r.dataset.i, d = usage.days[i];
+      for (let k = 0; k < cols.length; k++) cols[k].classList.toggle('dim', k !== i);
+      const rows = usage.models.filter(m => d.models[m]).map(m =>
+        `<div class="row"><span><i class="sw" style="background:${color(m)}"></i>${esc(m)}</span><span>${fmt(val(d.models[m]))}</span></div>`).join('');
+      tip.innerHTML = `<div class="t-date">${dayLabel(d.date)}/${d.date.slice(0, 4)}</div>${rows || `<div class="hint">${esc(tr('noActivity'))}</div>`}`
+        + (rows ? `<div class="row total"><span>${esc(tr('totalWord'))}</span><span>${full(totals[i])}</span></div>` : '');
+      tip.style.display = 'block';
+      const cx = padL + (i + 0.5) * step, tw = tip.offsetWidth;
+      tip.style.left = Math.min(Math.max(0, cx - tw / 2), wrap.clientWidth - tw) + 'px';
+      tip.style.top = Math.max(0, y(totals[i]) - tip.offsetHeight - 8) + 'px';
+    };
+    r.onmouseleave = () => {
+      tip.style.display = 'none';
+      for (let k = 0; k < cols.length; k++) cols[k].classList.remove('dim');
+    };
+  });
+}
+
+function renderProviderBreakdown() {
+  const el = $('provider-breakdown');
+  if (!el) return;
+  const up = rawUsage?.providers || { claude: {}, antigravity: {} };
+  const clWins = quotaCache?.claude?.windows || [];
+  const agWins = activeAgQuotaSnap()?.buckets || [];
+  const showUsed = prefs.percentStyle === 'used';
+
+  const row = (name, dotCls, d, wins, defColor) => {
+    const bars = wins.slice(0, 2).map(q => {
+      const pct = showUsed ? q.usedPercent : q.remainingPercent;
+      return `<div style="margin-top:6px;">
+        <div class="q-top" style="font-size:11px"><span class="q-name">${esc(q.displayName)}</span><span>${pct.toFixed(0)}%</span></div>
+        <div class="q-bar"><div class="q-fill" style="width:${pct}%;background:${barColor(q.remainingPercent, defColor)}"></div></div>
+      </div>`;
+    }).join('');
+    return `
+      <div class="rank-row">
+        <div class="rank-top">
+          <span class="rank-name"><span class="dot ${dotCls}" style="margin-right:6px;"></span>${name}</span>
+          <span><b>${fmt(d.total30dTokens)}</b> · ${fmtUsd(d.total30dCost)}</span>
+        </div>
+        <div class="hint">${esc(tr('todayWord'))}: ${fmt(d.todayTokens)} · ${esc(tr('turns30d', { n: full(d.messages30d) }))}</div>
+        ${bars}
+      </div>`;
+  };
+  el.innerHTML = row('Claude Code', 'cl', up.claude || {}, clWins, 'var(--claude)')
+    + row('Gemini Antigravity', 'ag', up.antigravity || {}, agWins, 'var(--ag)');
+}
+
+function renderTopModels() {
+  const el = $('top-models');
+  if (!el) return;
+  const rows = (rawUsage?.models || []).slice(0, 6);
+  if (!rows.length) { el.innerHTML = `<div class="hint">${esc(tr('noData'))}</div>`; return; }
+  const maxT = Math.max(...rows.map(r => r.totalTokens || 1), 1);
+  el.innerHTML = rows.map(r => `
+    <div class="rank-row">
+      <div class="rank-top">
+        <span class="rank-name">${esc(r.model)}</span>
+        <span><b>${fmt(r.totalTokens)}</b> · ${fmtUsd(r.costUsd)}</span>
+      </div>
+      <div class="rank-bar"><div class="q-fill" style="width:${Math.max(3, (r.totalTokens / maxT) * 100)}%;background:${r.provider === 'claude' ? 'var(--claude)' : 'var(--ag)'}"></div></div>
+    </div>`).join('');
+}
+
+let usageInFlight = null;
+async function loadUsage(force) {
+  if (!force && rawUsage && Date.now() - lastUsageAt < 45_000) return;
+  if (usageInFlight) return usageInFlight;
+  lastUsageAt = Date.now();
+  usageInFlight = (async () => {
+    try {
+      rawUsage = await invoke('get_usage', { tzOffset: -new Date().getTimezoneOffset() });
+      prepareUsage();
+    } catch (e) { $('usage-empty').textContent = tr('usageReadErr') + e; }
+  })();
+  try { await usageInFlight; } finally { usageInFlight = null; }
+}
+
+document.querySelectorAll('#seg-metric button').forEach(b => b.onclick = () => {
+  metric = b.dataset.metric; document.querySelectorAll('#seg-metric button').forEach(x => x.setAttribute('aria-pressed', x === b)); prepareUsage();
+});
+document.querySelectorAll('#seg-range button').forEach(b => b.onclick = () => {
+  rangeDays = +b.dataset.days; document.querySelectorAll('#seg-range button').forEach(x => x.setAttribute('aria-pressed', x === b)); prepareUsage();
+});
+document.querySelectorAll('#seg-provider button').forEach(b => b.onclick = () => {
+  provFilter = b.dataset.prov; document.querySelectorAll('#seg-provider button').forEach(x => x.setAttribute('aria-pressed', x === b)); prepareUsage();
+});
+
+let resizeRaf = 0;
+window.addEventListener('resize', () => {
+  if (currentSection !== 'usage' || !usage?.models?.length) return;
+  cancelAnimationFrame(resizeRaf);
+  resizeRaf = requestAnimationFrame(() => renderChart(false));
+});
+
+// ---------- Claude Profiles & Native ----------
+async function run(cmd, args, okToast) {
+  try { await invoke(cmd, args); if (okToast) showToast(okToast); }
+  catch (e) { alert(e); }
+}
+
+async function loadNative() {
+  const info = await invoke('get_native_info');
+  const card = $('native-card');
+  card.classList.toggle('active', info.active);
+  const who = info.loggedIn
+    ? esc([maskEmail(info.email), maskText(info.organization), info.billingType].filter(Boolean).join(' · '))
+    : esc(tr('notSignedIn'));
+  card.innerHTML = `
+    <div class="item-info">
+      <span class="item-title">Claude Login (Native)${info.active ? '<span class="pill ok">Active</span>' : ''}</span>
+      <span class="item-sub">${who}</span>
+    </div>
+    <div class="row-actions">
+      <button class="btn btn-primary" ${info.active ? 'disabled' : ''}>${esc(tr('restoreBtn'))}</button>
+    </div>`;
+  card.querySelector('button').onclick = () => run('restore_native', undefined, tr('toastNativeRestored'));
+  if (info.active) $('sb-cl-active').textContent = 'Claude: Native';
+}
+
+async function loadProfiles() {
+  try {
+    const [, data] = await Promise.all([loadNative(), invoke('get_profiles')]);
+    profilesCache = data.profiles;
+    activeKey = data.active;
+    const entries = Object.entries(data.profiles).sort(([a], [b]) => a.localeCompare(b));
+    $('nav-cl-count').textContent = entries.length;
+    if (data.active === FAILOVER_KEY) $('sb-cl-active').textContent = 'Claude: Failover';
+
+    const list = $('profile-list');
+    list.innerHTML = entries.length ? '' : `<div class="hint">${esc(tr('noProfiles'))}</div>`;
+    const frag = document.createDocumentFragment();
+    for (const [key, profile] of entries) {
+      const active = key === data.active;
+      if (active) $('sb-cl-active').textContent = 'Claude: ' + profile.name;
+      const item = document.createElement('div');
+      item.className = 'item-row' + (active ? ' active' : '');
+      const hasSecret = !!(profile.env?.ANTHROPIC_AUTH_TOKEN || profile.env?.ANTHROPIC_API_KEY);
+      item.innerHTML = `
+        <div class="item-info">
+          <span class="item-title">${esc(profile.name)}${active ? '<span class="pill ok">Active</span>' : ''}</span>
+          <span class="item-sub">${esc(key)} · ${esc(maskUrl(profile.env.ANTHROPIC_BASE_URL) || 'default')}${hasSecret ? ' · token: ***' : ''}</span>
+          ${modelsSummary(profile.env)}
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-primary" ${active ? 'disabled' : ''}>${esc(tr('useBtn'))}</button>
+          <button class="btn">${esc(tr('editBtn'))}</button>
+          <button class="btn btn-danger">${esc(tr('deleteBtn'))}</button>
+        </div>`;
+      const [use, edit, del] = item.querySelectorAll('button');
+      use.onclick = () => run('switch_profile', { key }, tr('toastSwitchedTo', { n: profile.name }));
+      edit.onclick = () => openEditor(key, profile);
+      del.onclick = () => confirm(tr('confirmDelProfile', { n: profile.name })) && run('remove_profile', { key }, tr('toastProfileDeleted'));
+      frag.appendChild(item);
+    }
+    list.appendChild(frag);
+  } catch (e) { alert(e); }
+}
+
+const prefix = () => $('m-prefix').value.trim();
+const resolveModel = (v) => (v = v.trim()) && /^claude-/.test(v) ? prefix() + v : v;
+const isAlias = (v) => ['opus', 'sonnet', 'haiku', 'opusplan', 'default'].includes(v.replace(/\[1m\]$/, ''));
+
+function updateResolved() {
+  const p = prefix();
+  document.querySelectorAll('#prefix-chips .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.prefix === p));
+  for (const f of MODEL_FIELDS) {
+    const inp = $('m-' + f.id), el = $('r-' + f.id);
+    if (!inp || !el) continue;
+    const raw = inp.value.trim(), out = resolveModel(raw);
+    if (!raw) { el.textContent = ''; continue; }
+    let note = '';
+    if (!isAlias(raw) && !/claude/i.test(out)) note = tr('notClaudeWarn');
+    else if (f.family && /claude-/.test(out) && !out.includes(f.family) && !out.includes('fable')) note = tr('diffFamilyWarn');
+    el.innerHTML = `→ ${esc(out)}` + (note ? ` <span class="warn">· ${esc(note)}</span>` : '');
+  }
+}
+$('m-prefix').addEventListener('input', updateResolved);
+document.querySelectorAll('#prefix-chips .chip').forEach(c => c.onclick = () => { $('m-prefix').value = c.dataset.prefix; updateResolved(); });
+$('fill-latest').onclick = () => { MODEL_FIELDS.filter(f => f.latest).forEach(f => $('m-' + f.id).value = f.latest); updateResolved(); };
+
+function modelsSummary(env) {
+  const parts = MODEL_FIELDS.filter(f => env[f.env]).map(f => `${f.label}: ${env[f.env]}`);
+  return parts.length ? `<span class="models-line" title="${esc(parts.join('\n'))}">${esc(parts.join(' · '))}</span>` : '';
+}
+function detectPrefix(env) {
+  const found = new Set(MODEL_FIELDS.map(f => env[f.env]).filter(Boolean).map(v => (v.match(/^(.*?)claude-/) || [])[1]).filter(x => x !== undefined));
+  return found.size === 1 ? [...found][0] : '';
+}
+function openEditor(key, profile) {
+  editingKey = key;
+  const env = profile?.env || {};
+  const p = profile?.modelPrefix ?? detectPrefix(env);
+  $('modal-title').textContent = key ? tr('editProfileTitle', { n: profile.name }) : tr('addProfileTitle');
+  $('new-key').value = key || '';
+  $('new-name').value = profile?.name || '';
+  $('new-url').value = env.ANTHROPIC_BASE_URL || '';
+  $('new-token').value = '';
+  $('new-token').placeholder = key && env.ANTHROPIC_AUTH_TOKEN ? tr('keepTokenPh') : 'sk-...';
+  $('m-prefix').value = p;
+  for (const f of MODEL_FIELDS) {
+    let v = env[f.env] || '';
+    if (p && v.startsWith(p) && /^claude-/.test(v.slice(p.length))) v = v.slice(p.length);
+    $('m-' + f.id).value = v;
+  }
+  const extra = Object.entries(env).filter(([k]) => !FORM_ENV.has(k));
+  $('m-extra').value = extra.map(([k, v]) => `${k}=${v}`).join('\n');
+  $('m-extra').closest('details').open = extra.length > 0;
+  updateResolved();
+  $('add-modal').style.display = 'flex';
+  (key ? $('new-name') : $('new-key')).focus();
+}
+const closeModal = () => { $('add-modal').style.display = 'none'; };
+$('add-btn').onclick = () => openEditor(null, null);
+$('cancel-btn').onclick = closeModal;
+$('add-modal').addEventListener('click', e => { if (e.target === $('add-modal')) closeModal(); });
+$('save-btn').onclick = async () => {
+  const key = $('new-key').value.trim(), name = $('new-name').value.trim(), url = $('new-url').value.trim();
+  const oldEnv = editingKey ? (profilesCache[editingKey]?.env || {}) : {};
+  const token = $('new-token').value.trim() || oldEnv.ANTHROPIC_AUTH_TOKEN || '';
+  if (!key || !name || !url) return alert(tr('reqProfileFields'));
+  if (!token && !/ANTHROPIC_API_KEY=/.test($('m-extra').value)) return alert(tr('reqTokenField'));
+  const env = { ANTHROPIC_BASE_URL: url };
+  if (token) env.ANTHROPIC_AUTH_TOKEN = token;
+  for (const f of MODEL_FIELDS) { const v = resolveModel($('m-' + f.id).value); if (v) env[f.env] = v; }
+  for (const line of $('m-extra').value.split('\n')) {
+    const t = line.trim(); if (!t || t.startsWith('#')) continue;
+    const i = t.indexOf('='), k = i > 0 ? t.slice(0, i).trim() : '';
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(k)) return alert(tr('badEnvLine', { t }));
+    if (FORM_ENV.has(k)) return alert(tr('dupEnvField', { k }));
+    env[k] = t.slice(i + 1).trim();
+  }
+  try {
+    await invoke('save_profile', { oldKey: editingKey, key, name, env, modelPrefix: prefix() });
+    closeModal();
+    showToast(tr('toastProfileSaved'));
+  } catch (e) { alert(e); }
+};
+$('import-btn').onclick = async () => {
+  try { await invoke('import_legacy'); showToast(tr('toastImported')); }
+  catch (e) { if (e !== 'No file selected') alert(e); }
+};
+$('remove-all-btn').onclick = () =>
+  confirm(tr('confirmRemoveAll')) && run('remove_all', undefined, tr('toastAllRemoved'));
+
+// ---------- Failover ----------
+function renderChain() {
+  const keys = Object.keys(profilesCache).sort((a, b) => a.localeCompare(b));
+  const chosen = foChain.filter(k => profilesCache[k]);
+  const rows = [...chosen, ...keys.filter(k => !chosen.includes(k))];
+  const box = $('fo-chain');
+  if (!rows.length) { box.innerHTML = `<div class="hint">${esc(tr('need2ProfilesFo'))}</div>`; return; }
+  box.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  rows.forEach(k => {
+    const i = chosen.indexOf(k), on = i >= 0, p = profilesCache[k];
+    const row = document.createElement('div');
+    row.className = 'chain-row' + (on ? '' : ' off');
+    row.innerHTML = `
+      <input type="checkbox" ${on ? 'checked' : ''} aria-label="${esc(p.name)}">
+      <span class="ord">${on ? i + 1 : '–'}</span>
+      <span class="nm">${esc(p.name)}<small>${esc(maskUrl(p.env.ANTHROPIC_BASE_URL))}</small></span>
+      <span class="row-actions">
+        <button class="btn" style="padding:3px 6px" ${on && i > 0 ? '' : 'disabled'}>${ICO.up}</button>
+        <button class="btn" style="padding:3px 6px" ${on && i < chosen.length - 1 ? '' : 'disabled'}>${ICO.down}</button>
+      </span>`;
+    const [cb, up, down] = row.querySelectorAll('input, button');
+    const move = (d) => { const c = [...chosen]; [c[i], c[i + d]] = [c[i + d], c[i]]; foChain = c; foDirty = true; renderChain(); };
+    cb.onchange = () => { foChain = cb.checked ? [...chosen, k] : chosen.filter(x => x !== k); foDirty = true; renderChain(); };
+    up.onclick = () => move(-1);
+    down.onclick = () => move(1);
+    frag.appendChild(row);
+  });
+  box.appendChild(frag);
+}
+
+let lastFoHtml = '';
+function renderFailoverStatus(st) {
+  const active = activeKey === FAILOVER_KEY;
+  const name = (k) => profilesCache[k]?.name || k;
+  $('fo-use').disabled = active || !st.chain.some(k => profilesCache[k]);
+  $('fo-use').textContent = active ? tr('inUse') : tr('useFailover');
+  const parts = [];
+  if (st.bindError) parts.push(`<span class="err">${esc(st.bindError)}</span>`);
+  else if (st.running) parts.push(`<span class="dot on"></span> <code>127.0.0.1:${st.port}</code>${active ? ` · ${esc(tr('proxyRunning'))}` : ''}`);
+  else parts.push(`<span class="dot"></span> ${esc(tr('proxyOff'))}`);
+  if (st.lastProfile) parts.push(`${esc(tr('lastUsed'))}: <b>${esc(name(st.lastProfile))}</b> (${fmtTime(st.lastAt)})`);
+  const cooling = Object.entries(st.cooling || {});
+  if (cooling.length) parts.push(`${esc(tr('coolingDown'))}: ` + cooling.map(([k, s]) => `${esc(name(k))} (${s}s)`).join(', '));
+  let html = parts.map(x => `<div>${x}</div>`).join('');
+  if (st.events?.length) html += '<ul>' + st.events.map(e => `<li>${fmtTime(e.at)} · ${esc(e.msg)}</li>`).join('') + '</ul>';
+  if (html !== lastFoHtml) {
+    lastFoHtml = html;
+    $('fo-status').innerHTML = html;
+  }
+}
+async function loadFailover(resetForm = true) {
+  try {
+    const st = await invoke('get_failover');
+    if (resetForm || !foDirty) {
+      foChain = st.chain; foDirty = false;
+      $('fo-port').value = st.port; $('fo-cool').value = st.cooldownSecs;
+      renderChain();
+    }
+    renderFailoverStatus(st);
+  } catch (e) { $('fo-status').textContent = String(e); }
+}
+$('fo-save').onclick = async () => {
+  const chain = foChain.filter(k => profilesCache[k]);
+  if (chain.length === 1 && !confirm(tr('confirm1Fo'))) return;
+  try {
+    await invoke('save_failover', { chain, port: +$('fo-port').value || 18431, cooldownSecs: +$('fo-cool').value || 60 });
+    foDirty = false;
+    showToast(tr('toastFoSaved'));
+  } catch (e) { alert(e); }
+};
+$('fo-use').onclick = () => foDirty ? alert(tr('saveChainFirst')) : run('switch_profile', { key: FAILOVER_KEY }, tr('toastFoEnabled'));
+
+// ---------- Antigravity ----------
+async function agRun(btn, label, cmd, args, okMsg) {
+  if (agBusy) return; agBusy = true;
+  const old = btn.textContent; btn.textContent = label; btn.disabled = true;
+  try { await invoke(cmd, args); if (okMsg) showToast(okMsg); } catch (e) { alert(e); }
+  agBusy = false; btn.textContent = old; btn.disabled = false;
+  loadAntigravity(currentSection === 'antigravity');
+}
+
+async function loadAntigravity(includeRunning = false) {
+  let st;
+  try { st = await invoke('antigravity_status', { includeRunning }); agStatus = st; }
+  catch (e) { $('ag-current').innerHTML = `<div class="item-info"><span class="item-sub">${esc(e)}</span></div>`; return; }
+
+  $('nav-ag-count').textContent = (st.accounts || []).length;
+  const known = st.accounts.find(a => a.key === st.active);
+  $('sb-ag-active').textContent = 'AG: ' + (known ? maskLabel(known.label, known.email) : (st.loggedIn ? maskEmail(st.email) : 'Offline'));
+
+  const installed = st.apps.filter(a => a.installed);
+  const running = st.apps.filter(a => a.running).map(a => a.name);
+  const who = st.loggedIn ? esc(maskEmail(st.email) || tr('signedIn')) : esc(tr('notSignedIn'));
+  const appsLine = installed.map(a =>
+    `<span class="item-sub" style="display:flex;align-items:center;gap:6px;">${a.isApp ? `<span class="dot ${a.running ? 'on' : ''}"></span>` : '<span class="dot" style="opacity:0"></span>'}${esc(a.name)}: ${esc(maskEmail(a.email) || tr('notSignedIn'))}</span>`
+  ).join('');
+
+  $('ag-current').innerHTML = `
+    <div class="item-info">
+      <span class="item-title">${who}${known ? `<span class="pill ok">${esc(maskLabel(known.label, known.email))}</span>` : (st.loggedIn ? `<span class="pill warn">${esc(tr('unsavedPill'))}</span>` : '')}</span>
+      ${appsLine}
+    </div>
+    <div class="row-actions">
+      <button class="btn btn-danger" id="ag-clear" ${st.loggedIn ? '' : 'disabled'}>Clear</button>
+      ${st.hasOriginal ? `<button class="btn" id="ag-restore">${esc(tr('restoreBtn'))}</button>` : ''}
+    </div>`;
+
+  const savedCount = st.accounts.filter(a => a.hasLogin).length;
+  $('ag-next').disabled = savedCount < 2;
+  $('ag-next').onclick = () => (!running.length || confirm(tr('confirmCloseReopen', { apps: running.join(', ') })))
+    && agRun($('ag-next'), '…', 'antigravity_switch_next', undefined, tr('toastAgSwitched'));
+  $('ag-clear').onclick = () => confirm(tr('confirmClearAg'))
+    && agRun($('ag-clear'), '…', 'antigravity_clear', undefined, tr('toastAgCleared'));
+  const restore = $('ag-restore');
+  if (restore) restore.onclick = () => confirm(tr('confirmRestoreAg')) && agRun(restore, '…', 'antigravity_restore', undefined, tr('toastAgRestored'));
+  $('ag-capture').disabled = !st.loggedIn;
+
+  const list = $('ag-list');
+  list.innerHTML = st.accounts.length ? '' : `<div class="hint">${esc(tr('noAgAccounts'))}</div>`;
+  const frag = document.createDocumentFragment();
+  for (const a of st.accounts) {
+    const active = a.key === st.active;
+    const cachedQ = quotaCache?.antigravity?.[a.key];
+    const minRem = cachedQ?.buckets?.length ? Math.min(...cachedQ.buckets.map(b => b.remainingPercent)) : null;
+    const qPill = minRem !== null ? `<span class="pill ${minRem <= 15 ? 'bad' : minRem <= 35 ? 'warn' : 'ok'}">${minRem.toFixed(0)}%</span>` : '';
+    const saved = a.hasLogin ? tr('savedOn', { d: new Date(a.savedAt * 1000).toLocaleDateString(localeTag()) }) : tr('notCaptured');
+    const item = document.createElement('div');
+    item.className = 'item-row' + (active ? ' active' : '');
+    item.innerHTML = `
+      <div class="item-info">
+        <span class="item-title">${esc(maskLabel(a.label, a.email))}${active ? '<span class="pill ok">Active</span>' : ''}${qPill}</span>
+        <span class="item-sub">${esc(maskEmail(a.email) || a.key)} · ${esc(saved)}</span>
+        ${a.notes ? `<span class="item-sub">${esc(a.notes)}</span>` : ''}
+      </div>
+      <div class="row-actions">
+        <button class="btn btn-primary" ${active || !a.hasLogin ? 'disabled' : ''}>${esc(tr('useBtn'))}</button>
+        ${!a.hasLogin && st.loggedIn ? `<button class="btn">${esc(tr('saveHereBtn'))}</button>` : ''}
+        <button class="btn">${esc(tr('editBtn'))}</button>
+        <button class="btn btn-danger">${esc(tr('deleteBtn'))}</button>
+      </div>`;
+    const btns = item.querySelectorAll('button');
+    let idx = 0;
+    const use = btns[idx++], capHere = (!a.hasLogin && st.loggedIn) ? btns[idx++] : null, edit = btns[idx++], del = btns[idx++];
+    use.onclick = () => (!running.length || confirm(tr('confirmCloseReopen', { apps: running.join(', ') })))
+      && agRun(use, '…', 'antigravity_switch', { key: a.key }, tr('toastSwitchedTo', { n: maskLabel(a.label, a.email) }));
+    if (capHere) capHere.onclick = () => agRun(capHere, '…', 'antigravity_capture', { key: a.key }, tr('toastCaptured'));
+    edit.onclick = () => openAgEditor(a);
+    del.onclick = () => confirm(tr('confirmDelAg', { n: maskLabel(a.label, a.email) })) && run('antigravity_remove', { key: a.key }, tr('toastAccDeleted'));
+    frag.appendChild(item);
+  }
+  list.appendChild(frag);
+  renderQuotasUI();
+}
+
+function openAgEditor(a) {
+  agEditing = a?.key ?? null;
+  $('ag-modal-title').textContent = a ? tr('editAgTitle') : tr('declareAgTitle');
+  $('ag-key').value = a?.key || '';
+  $('ag-label').value = a?.label || '';
+  $('ag-email').value = a?.email || '';
+  $('ag-email').disabled = !!a?.hasLogin;
+  $('ag-notes').value = a?.notes || '';
+  $('ag-modal').style.display = 'flex';
+  (a ? $('ag-label') : $('ag-key')).focus();
+}
+const closeAg = () => { $('ag-modal').style.display = 'none'; };
+$('ag-new-slot').onclick = () => openAgEditor(null);
+$('ag-cancel').onclick = closeAg;
+$('ag-modal').addEventListener('click', e => { if (e.target === $('ag-modal')) closeAg(); });
+$('ag-save').onclick = async () => {
+  const key = $('ag-key').value.trim(); if (!key) return alert(tr('reqKey'));
+  try {
+    await invoke('antigravity_save', { oldKey: agEditing, key, label: $('ag-label').value, email: $('ag-email').value, notes: $('ag-notes').value });
+    closeAg();
+    showToast(tr('toastAccSaved'));
+  } catch (e) { alert(e); }
+};
+$('ag-capture').onclick = () => agRun($('ag-capture'), '…', 'antigravity_capture', { key: null }, tr('toastCaptured'));
+$('ag-open').onclick = () => run('antigravity_open', undefined, tr('toastOpeningAg'));
+$('ag-add-another').onclick = async () => {
+  if (!confirm(tr('confirmAddAnother'))) return;
+  const btn = $('ag-add-another'); if (agBusy) return;
+  agBusy = true; btn.disabled = true;
+  try {
+    await invoke('antigravity_add_another');
+    showToast(tr('toastSignNewAg'));
+  } catch (e) { alert(e); }
+  agBusy = false; btn.disabled = false;
+  loadAntigravity(true);
+};
+
+// ---------- Backup & Import ----------
+document.querySelectorAll('#seg-import-mode button').forEach(b => b.onclick = () => {
+  importMode = b.dataset.mode;
+  document.querySelectorAll('#seg-import-mode button').forEach(x => x.setAttribute('aria-pressed', x === b));
+});
+$('bk-export-btn').onclick = async () => {
+  try {
+    const res = await invoke('export_backup', { includeSecrets: $('bk-include-secrets').checked, path: null });
+    if (res.cancelled) return;
+    $('bk-export-res').innerHTML = `<div class="banner ok">${tr('exportedBanner', { s: fmtBytes(res.sizeBytes), p: esc(res.path) })}</div>`;
+    showToast(tr('toastExported'));
+  } catch (e) { alert(e); }
+};
+$('bk-snap-btn').onclick = async () => {
+  try {
+    const s = await invoke('create_snapshot', { includeSecrets: $('bk-include-secrets').checked });
+    $('bk-export-res').innerHTML = `<div class="banner ok">${tr('snapCreatedBanner', { f: esc(s.filename) })}</div>`;
+    loadSnapshots();
+    showToast(tr('toastSnapCreated'));
+  } catch (e) { alert(e); }
+};
+$('bk-import-btn').onclick = async () => {
+  if (importMode === 'replace' && !confirm(tr('confirmReplaceImport'))) return;
+  try {
+    const res = await invoke('import_backup', { mode: importMode, path: null });
+    if (res.cancelled) return;
+    $('bk-import-res').innerHTML = `<div class="banner ok">${tr('importedBanner', { f: esc(res.detectedFormat), m: esc(res.mode), s: esc(res.safetySnapshot) })}</div>`;
+    await refreshAll(); loadSnapshots();
+    showToast(tr('toastImported'));
+  } catch (e) { alert(e); }
+};
+async function loadSnapshots() {
+  const wrap = $('bk-snaps-wrap');
+  try {
+    const list = await invoke('list_snapshots');
+    if (!list.length) { wrap.innerHTML = `<div class="hint">${esc(tr('noSnapshots'))}</div>`; return; }
+    wrap.innerHTML = `<table>
+      <tr><th>${esc(tr('thFile'))}</th><th>${esc(tr('thTime'))}</th><th>${esc(tr('thData'))}</th><th>${esc(tr('thSecrets'))}</th><th class="num">${esc(tr('thSize'))}</th><th class="num"></th></tr>
+      ${list.map(s => `
+        <tr>
+          <td><code>${esc(s.filename)}</code></td>
+          <td>${esc(fmtDate(s.createdAt))}</td>
+          <td>${s.claudeProfiles} Claude · ${s.antigravityAccounts} AG</td>
+          <td>${s.includeSecrets ? '*** (0600)' : esc(tr('hiddenWord'))}</td>
+          <td class="num">${fmtBytes(s.sizeBytes)}</td>
+          <td class="num">
+            <button class="btn" data-restore="${esc(s.path)}">${esc(tr('restoreBtn'))}</button>
+            <button class="btn btn-danger" data-del-snap="${esc(s.filename)}">${esc(tr('deleteBtn'))}</button>
+          </td>
+        </tr>`).join('')}
+    </table>`;
+    wrap.querySelectorAll('[data-restore]').forEach(b => b.onclick = async () => {
+      if (!confirm(tr('confirmRestoreSnap'))) return;
+      try {
+        await invoke('restore_snapshot', { path: b.dataset.restore, mode: 'replace' });
+        await refreshAll(); loadSnapshots();
+        showToast(tr('toastSnapRestored'));
+      } catch (e) { alert(e); }
+    });
+    wrap.querySelectorAll('[data-del-snap]').forEach(b => b.onclick = async () => {
+      if (!confirm(tr('confirmDelSnap', { f: b.dataset.delSnap }))) return;
+      try { await invoke('delete_snapshot', { filename: b.dataset.delSnap }); loadSnapshots(); showToast(tr('toastSnapDeleted')); }
+      catch (e) { alert(e); }
+    });
+  } catch (e) { wrap.innerHTML = `<div class="hint">${esc(e)}</div>`; }
+}
+
+function refreshViews() {
+  loadProfiles();
+  loadFailover(false);
+  loadAntigravity(currentSection === 'antigravity');
+  renderQuotasUI();
+}
+
+let refreshInFlight = null, stateDebounce = null, lastFocusSync = 0;
+async function refreshAll() {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    await loadPreferences();
+    const [, , , q] = await Promise.all([
+      loadProfiles(),
+      loadFailover(),
+      loadAntigravity(currentSection === 'antigravity'),
+      invoke('get_quota_snapshot').catch(() => quotaCache),
+    ]);
+    quotaCache = q;
+    renderQuotasUI();
+  })();
+  try { await refreshInFlight; } finally { refreshInFlight = null; }
+}
+
+listen('state-changed', () => {
+  if (document.hidden) return;
+  clearTimeout(stateDebounce);
+  stateDebounce = setTimeout(() => refreshAll(), 80);
+});
+listen('navigate-section', (ev) => switchSection(String(ev.payload || 'usage')));
+
+setInterval(() => {
+  if (document.visibilityState === 'visible' && currentSection === 'claude') {
+    loadFailover(false);
+  }
+}, 5000);
+
+window.addEventListener('focus', () => {
+  const now = Date.now();
+  if (now - lastFocusSync < 15_000) return;
+  lastFocusSync = now;
+  refreshAll();
+  if (currentSection === 'usage') loadUsage(false);
+});
+
+window.onload = async () => {
+  applyPrefs();
+  const hash = (location.hash || '').replace(/^#/, '');
+  if (hash && SECTIONS.includes(hash)) {
+    currentSection = hash;
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.section === hash));
+    document.querySelectorAll('.pane').forEach(p => p.classList.toggle('active', p.id === 'pane-' + hash));
+  }
+  await refreshAll();
+  if (currentSection === 'backup') loadSnapshots();
+  loadUsage(true);
+};
+</script>
+</body>
+</html>

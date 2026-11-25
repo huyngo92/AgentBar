@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentBar</title>
+<style>
+:root {
+  color-scheme: light;
+  --shell: rgba(246, 246, 244, 0.72);
+  --chrome: rgba(255, 255, 255, 0.56);
+  --surface: rgba(255, 255, 255, 0.72);
+  --raised: rgba(15, 23, 42, 0.055);
+  --pill-bg: #ffffff;
+  --border: rgba(15, 23, 42, 0.085);
+  --border-strong: rgba(15, 23, 42, 0.16);
+  --sheen: rgba(255, 255, 255, 0.65);
+  --text: #111318;
+  --text-2: #4c5260;
+  --muted: #7c8392;
+  --hover: rgba(15, 23, 42, 0.05);
+  --ring: rgba(17, 19, 24, 0.22);
+  --claude: #D97757;
+  --ag: #16A34A;
+  --ok: #16A34A;
+  --warn: #D97706;
+  --bad: #DC2626;
+  --track: rgba(15, 23, 42, 0.085);
+  --toast-bg: rgba(22, 24, 29, 0.88);
+  --toast-fg: #f8fafc;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --shell: rgba(20, 22, 27, 0.72);
+    --chrome: rgba(26, 29, 35, 0.54);
+    --surface: rgba(30, 33, 40, 0.66);
+    --raised: rgba(255, 255, 255, 0.065);
+    --pill-bg: rgba(52, 57, 68, 0.92);
+    --border: rgba(255, 255, 255, 0.085);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --sheen: rgba(255, 255, 255, 0.08);
+    --text: #F2F4F8;
+    --text-2: #ABB2C2;
+    --muted: #788092;
+    --hover: rgba(255, 255, 255, 0.06);
+    --ring: rgba(242, 244, 248, 0.26);
+    --claude: #E38464;
+    --ag: #34D399;
+    --ok: #22C55E;
+    --warn: #F59E0B;
+    --bad: #F87171;
+    --track: rgba(255, 255, 255, 0.10);
+    --toast-bg: rgba(242, 244, 248, 0.92);
+    --toast-fg: #111318;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --shell: rgba(20, 22, 27, 0.72);
+  --chrome: rgba(26, 29, 35, 0.54);
+  --surface: rgba(30, 33, 40, 0.66);
+  --raised: rgba(255, 255, 255, 0.065);
+  --pill-bg: rgba(52, 57, 68, 0.92);
+  --border: rgba(255, 255, 255, 0.085);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --sheen: rgba(255, 255, 255, 0.08);
+  --text: #F2F4F8;
+  --text-2: #ABB2C2;
+  --muted: #788092;
+  --hover: rgba(255, 255, 255, 0.06);
+  --ring: rgba(242, 244, 248, 0.26);
+  --claude: #E38464;
+  --ag: #34D399;
+  --ok: #22C55E;
+  --warn: #F59E0B;
+  --bad: #F87171;
+  --track: rgba(255, 255, 255, 0.10);
+  --toast-bg: rgba(242, 244, 248, 0.92);
+  --toast-fg: #111318;
+}
+
+* { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+html, body {
+  margin: 0; padding: 0; width: 100%; height: 100%;
+  background: transparent; color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-size: 12px; line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+.shell {
+  display: flex; flex-direction: column; height: 100vh; width: 100%;
+  background: var(--shell);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  backdrop-filter: saturate(180%) blur(22px);
+  border: 0.5px solid var(--border-strong);
+  box-shadow: inset 0 0.5px 0 var(--sheen);
+  border-radius: 13px;
+  overflow: hidden;
+  transform-origin: top center;
+}
+.shell.entering { animation: popIn 140ms cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes popIn {
+  from { opacity: 0.01; transform: translateY(-4px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Header */
+.top-bar {
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+  border-bottom: 0.5px solid var(--border); background: var(--chrome);
+}
+.segs {
+  display: flex; flex: 1; gap: 2px; background: var(--raised);
+  padding: 2px; border-radius: 8px; border: 0.5px solid var(--border);
+}
+.seg-tab {
+  flex: 1; border: 0; background: transparent; color: var(--text-2);
+  border-radius: 6px; padding: 4.5px 6px; cursor: pointer; font: inherit;
+  font-size: 11.5px; font-weight: 600;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease, transform 90ms ease;
+}
+.seg-tab:hover { color: var(--text); }
+.seg-tab:active { transform: scale(0.975); }
+.seg-tab.active {
+  background: var(--pill-bg); color: var(--text);
+  box-shadow: 0 1px 2.5px rgba(0,0,0,0.12), 0 0 0 0.5px var(--border);
+}
+
+.icon-actions { display: flex; gap: 2px; }
+.icon-btn {
+  width: 26px; height: 26px; border-radius: 6px; border: 0;
+  background: transparent; color: var(--text-2); cursor: pointer;
+  display: grid; place-items: center; padding: 0;
+  transition: background 120ms ease, color 120ms ease, transform 90ms ease;
+}
+.icon-btn:hover { background: var(--hover); color: var(--text); }
+.icon-btn:active { transform: scale(0.92); }
+.icon-btn.on { background: var(--raised); color: var(--text); }
+.icon-btn svg { width: 14px; height: 14px; }
+.spin svg { animation: spin 0.75s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+button:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring); }
+
+/* Body */
+.body {
+  flex: 1; overflow-y: auto; padding: 9px 10px;
+  display: flex; flex-direction: column; gap: 8px;
+  overscroll-behavior: contain;
+}
+.body::-webkit-scrollbar { width: 4px; }
+.body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+
+.section {
+  background: var(--surface); border: 0.5px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03), inset 0 0.5px 0 var(--sheen);
+  border-radius: 10px; padding: 9px 11px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.sec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sec-title { display: flex; align-items: center; gap: 6px; font-weight: 650; font-size: 12px; letter-spacing: -0.01em; }
+.sec-title svg { width: 13.5px; height: 13.5px; color: var(--text-2); }
+.sec-sub { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 172px; }
+
+/* Quota Meter */
+.q-list { display: flex; flex-direction: column; gap: 6px; }
+.q-item { display: flex; flex-direction: column; gap: 3px; }
+.q-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; }
+.q-name { color: var(--text-2); font-weight: 550; }
+.q-right { display: flex; align-items: baseline; gap: 6px; font-variant-numeric: tabular-nums; }
+.q-reset { color: var(--muted); font-size: 10.5px; }
+.q-pct { font-weight: 650; color: var(--text); }
+.q-bar { height: 4px; border-radius: 99px; background: var(--track); overflow: hidden; }
+.q-fill { height: 100%; border-radius: 99px; transition: width 240ms cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Switcher */
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip {
+  border: 0.5px solid var(--border-strong); background: rgba(127,127,127,0.05); color: var(--text-2);
+  border-radius: 6px; padding: 3px 8px; font: inherit; font-size: 11px; font-weight: 550;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+.chip:hover:not(:disabled) { background: var(--hover); color: var(--text); }
+.chip:active:not(:disabled) { transform: scale(0.96); }
+.chip:disabled { opacity: 0.38; cursor: default; }
+.chip.active {
+  border-color: var(--text); background: var(--pill-bg); color: var(--text);
+  font-weight: 650; box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+}
+.chip svg { width: 11px; height: 11px; }
+
+.rows { display: flex; flex-direction: column; gap: 4px; }
+.row-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 6.5px 9px; border-radius: 7.5px; border: 0.5px solid var(--border);
+  background: rgba(127,127,127,0.04); cursor: pointer; text-align: left; color: inherit; font: inherit;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+}
+.row-btn:hover:not(:disabled) { background: var(--hover); border-color: var(--border-strong); }
+.row-btn:active:not(:disabled) { transform: scale(0.99); }
+.row-btn:disabled { opacity: 0.42; cursor: default; }
+.row-btn.active {
+  border-color: var(--border-strong); background: var(--pill-bg);
+  box-shadow: 0 1px 2.5px rgba(0,0,0,0.06);
+}
+.row-l { display: flex; align-items: center; gap: 7px; min-width: 0; flex: 1; }
+.dot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--muted); }
+.dot.cl { background: var(--claude); }
+.dot.ag { background: var(--ag); }
+.dot.ok { background: var(--ok); }
+.row-txt { display: flex; flex-direction: column; min-width: 0; }
+.row-name { font-weight: 600; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-sub { font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-tag { font-size: 10.5px; color: var(--text-2); font-weight: 600; flex: none; font-variant-numeric: tabular-nums; }
+
+/* Stats strip */
+.stats-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.stat-box {
+  background: var(--surface); border: 0.5px solid var(--border); border-radius: 9px;
+  box-shadow: inset 0 0.5px 0 var(--sheen);
+  padding: 7.5px 10px; display: flex; flex-direction: column; gap: 1px;
+}
+.stat-lbl { font-size: 10.5px; color: var(--muted); }
+.stat-val { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+.act-row { display: flex; gap: 6px; }
+.btn {
+  flex: 1; padding: 6px 8px; border-radius: 7px; border: 0.5px solid var(--border-strong);
+  background: var(--pill-bg); color: var(--text); font: inherit; font-size: 11px; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  transition: filter 120ms ease, transform 80ms ease;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.03); }
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn svg { width: 12px; height: 12px; }
+
+/* Footer */
+.footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 10px; border-top: 0.5px solid var(--border); background: var(--chrome);
+}
+.foot-left { display: flex; align-items: center; gap: 2px; }
+.foot-btn {
+  border: 0; background: transparent; color: var(--text-2); font: inherit; font-size: 11px;
+  font-weight: 550; padding: 4px 7px; border-radius: 6px; cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.foot-btn:hover { background: var(--hover); color: var(--text); }
+.foot-btn.lang-pill {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.03em;
+  background: var(--raised); border: 0.5px solid var(--border); padding: 2.5px 6px;
+}
+.foot-btn.danger:hover { color: var(--bad); }
+.muted-hint { font-size: 11px; color: var(--muted); }
+
+.toast {
+  position: fixed; bottom: 40px; left: 14px; right: 14px;
+  background: var(--toast-bg); color: var(--toast-fg);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  padding: 6px 11px; border-radius: 8px;
+  font-size: 11px; font-weight: 550; text-align: center;
+  opacity: 0; transform: translateY(4px); pointer-events: none;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .shell.entering, .spin svg { animation: none; }
+  *, .q-fill, .toast { transition: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+  <div class="top-bar">
+    <div class="segs" role="tablist">
+      <button class="seg-tab active" data-tab="overview" id="tab-overview">Overview</button>
+      <button class="seg-tab" data-tab="claude" id="tab-claude">Claude</button>
+      <button class="seg-tab" data-tab="antigravity" id="tab-ag">Antigravity</button>
+    </div>
+    <div class="icon-actions">
+      <button class="icon-btn" id="btn-privacy"></button>
+      <button class="icon-btn" id="btn-refresh"></button>
+      <button class="icon-btn" id="btn-dash"></button>
+    </div>
+  </div>
+
+  <div class="body" id="content">
+    <div class="muted-hint" style="text-align:center;padding:30px 0;">Loading…</div>
+  </div>
+
+  <div class="footer">
+    <div class="foot-left">
+      <button class="foot-btn lang-pill" id="foot-lang" title="Switch language EN / VI">EN</button>
+      <button class="foot-btn" id="foot-backup">Backup</button>
+      <button class="foot-btn" id="foot-dash">Settings…</button>
+    </div>
+    <button class="foot-btn danger" id="foot-quit">Quit</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const FAILOVER_KEY = '__failover__';
+
+const I18N = {
+  en: {
+    overview: 'Overview',
+    privacyTip: 'Mask/show sensitive data (P)',
+    refreshTip: 'Refresh quotas (⌘R)',
+    dashTip: 'Open Dashboard (⌘,)',
+    backup: 'Backup',
+    settings: 'Settings…',
+    quit: 'Quit',
+    noClOauth: 'No OAuth quota yet',
+    clickRefreshCl: 'Click refresh to check quota',
+    clickRefreshAg: 'Click refresh to load Antigravity quota',
+    notSignedIn: 'Not signed in',
+    noAccounts: 'No accounts declared',
+    nextAccTip: 'Switch to next account',
+    today: 'Today',
+    days30: '30 days',
+    clQuotaTitle: 'Claude Quota',
+    checkKeychain: 'Check Keychain',
+    noClQuotaMsg: 'Claude OAuth quota unavailable',
+    profiles: 'Profiles',
+    defaultSub: 'Default',
+    agQuotaTitle: 'Antigravity Quota',
+    agQuotaHint: 'Click refresh above to read Gemini & Claude/GPT quotas.',
+    accounts: 'Accounts',
+    savedCount: '{s}/{t} saved',
+    capture: 'Capture',
+    next: 'Next',
+    swClaudeOk: 'Switched Claude profile',
+    swAgWait: 'Switching Antigravity…',
+    swAgOk: 'Switched Antigravity',
+    swWait: 'Switching…',
+    swTo: 'Switched: {n}',
+    capturedOk: 'Session captured',
+    quotaUpdated: 'Quotas updated',
+    errPrefix: 'Error: ',
+  },
+  vi: {
+    overview: 'Tổng quan',
+    privacyTip: 'Che/hiện dữ liệu nhạy cảm (P)',
+    refreshTip: 'Làm mới hạn mức (⌘R)',
+    dashTip: 'Mở Dashboard (⌘,)',
+    backup: 'Backup',
+    settings: 'Cài đặt…',
+    quit: 'Thoát',
+    noClOauth: 'Chưa có quota OAuth',
+    clickRefreshCl: 'Bấm làm mới để kiểm tra quota',
+    clickRefreshAg: 'Bấm làm mới để đọc quota Antigravity',
+    notSignedIn: 'Chưa đăng nhập',
+    noAccounts: 'Chưa khai báo',
+    nextAccTip: 'Chuyển tài khoản kế tiếp',
+    today: 'Hôm nay',
+    days30: '30 ngày',
+    clQuotaTitle: 'Hạn mức Claude',
+    checkKeychain: 'Kiểm tra Keychain',
+    noClQuotaMsg: 'Chưa đọc được hạn mức Claude OAuth',
+    profiles: 'Profiles',
+    defaultSub: 'Mặc định',
+    agQuotaTitle: 'Hạn mức Antigravity',
+    agQuotaHint: 'Bấm nút làm mới ở trên để đọc quota Gemini & Claude/GPT.',
+    accounts: 'Tài khoản',
+    savedCount: '{s}/{t} đã lưu',
+    capture: 'Lưu phiên',
+    next: 'Kế tiếp',
+    swClaudeOk: 'Đã chuyển Claude',
+    swAgWait: 'Đang chuyển Antigravity…',
+    swAgOk: 'Đã chuyển Antigravity',
+    swWait: 'Đang chuyển…',
+    swTo: 'Đã chuyển: {n}',
+    capturedOk: 'Đã lưu phiên',
+    quotaUpdated: 'Đã cập nhật hạn mức',
+    errPrefix: 'Lỗi: ',
+  },
+};
+
+const ICO = {
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>',
+  external: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>',
+  terminal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
+  layers: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+  swap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>',
+};
+
+let state = {
+  tab: 'overview',
+  prefs: { language: 'en', theme: 'system', percentStyle: 'left', privacyMode: true },
+  profiles: { active: '', profiles: {} },
+  native: {},
+  failover: { chain: [], running: false },
+  ag: { loggedIn: false, email: '', active: '', accounts: [] },
+  quota: { antigravity: {}, claude: null },
+  usage: null,
+  busy: false,
+};
+
+const lang = () => state.prefs.language === 'vi' ? 'vi' : 'en';
+const tr = (k, vars = {}) => {
+  let s = I18N[lang()][k] ?? I18N.en[k] ?? k;
+  for (const [vk, vv] of Object.entries(vars)) s = s.replace(`{${vk}}`, vv);
+  return s;
+};
+
+function maskEmail(v) {
+  if (!v) return '';
+  if (!state.prefs.privacyMode) return v;
+  const i = v.indexOf('@');
+  if (i < 0) return v.length <= 2 ? '***' : v.slice(0, 2) + '***';
+  const local = v.slice(0, i), dom = v.slice(i + 1);
+  return (local.length <= 2 ? local[0] || '' : local.slice(0, 3)) + '***@' + dom;
+}
+function maskUrl(u) {
+  if (!u) return '';
+  if (!state.prefs.privacyMode) return u;
+  try {
+    const parsed = new URL(u);
+    const parts = parsed.hostname.split('.');
+    const host = parts.length > 1 ? `***.${parts.slice(-1)[0]}` : '***';
+    return `${parsed.protocol}//${host}`;
+  } catch { return '***'; }
+}
+const maskLabel = (label, email) => (state.prefs.privacyMode && email && label === email) ? maskEmail(label) : label;
+
+const fmtTok = (n) => {
+  n = Number(n) || 0;
+  if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+  return String(Math.round(n));
+};
+const fmtUsd = (n) => '$' + (Number(n) || 0).toFixed(2);
+const fmtReset = (unix) => {
+  if (!unix) return '';
+  const diff = Math.max(0, unix - Math.floor(Date.now() / 1000));
+  if (diff <= 0) return '';
+  const d = Math.floor(diff / 86400), h = Math.floor((diff % 86400) / 3600), m = Math.floor((diff % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${Math.max(1, m)}m`;
+};
+const barColor = (rem, defColor) => rem <= 15 ? 'var(--bad)' : rem <= 35 ? 'var(--warn)' : defColor;
+
+function toast(msg) {
+  const el = $('toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => el.classList.remove('show'), 1900);
+}
+
+let lastPrivacyIcon = null, lastLang = null;
+function applyPrefs() {
+  const t = state.prefs.theme || 'system';
+  if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+  const pOn = !!state.prefs.privacyMode;
+  if (lastPrivacyIcon !== pOn) {
+    lastPrivacyIcon = pOn;
+    $('btn-privacy').innerHTML = pOn ? ICO.eyeOff : ICO.eye;
+    $('btn-privacy').classList.toggle('on', pOn);
+  }
+  const l = lang();
+  if (lastLang !== l) {
+    lastLang = l;
+    document.documentElement.lang = l;
+    $('tab-overview').textContent = tr('overview');
+    $('btn-privacy').title = tr('privacyTip');
+    $('btn-refresh').title = tr('refreshTip');
+    $('btn-dash').title = tr('dashTip');
+    $('foot-lang').textContent = l.toUpperCase();
+    $('foot-backup').textContent = tr('backup');
+    $('foot-dash').textContent = tr('settings');
+    $('foot-quit').textContent = tr('quit');
+  }
+}
+
+function renderMeter(w, defColor) {
+  const usedMode = state.prefs.percentStyle === 'used';
+  const pct = usedMode ? w.usedPercent : w.remainingPercent;
+  const color = barColor(w.remainingPercent, defColor);
+  const reset = fmtReset(w.resetUnix);
+  return `
+    <div class="q-item">
+      <div class="q-top">
+        <span class="q-name">${esc(w.displayName)}</span>
+        <span class="q-right">
+          ${reset ? `<span class="q-reset">${esc(reset)}</span>` : ''}
+          <span class="q-pct">${pct.toFixed(0)}%</span>
+        </span>
+      </div>
+      <div class="q-bar"><div class="q-fill" style="width:${Math.max(0, Math.min(100, pct))}%;background:${color}"></div></div>
+    </div>`;
+}
+
+function activeAgQuota() {
+  const map = state.quota?.antigravity || {};
+  return (state.ag.active && map[state.ag.active]) || map['__current__'] || Object.values(map)[0] || null;
+}
+
+function renderOverview() {
+  const clQ = state.quota?.claude;
+  const agQ = activeAgQuota();
+  const clEntries = Object.entries(state.profiles.profiles || {}).sort(([a], [b]) => a.localeCompare(b));
+  const savedAg = (state.ag.accounts || []).filter(a => a.hasLogin);
+  const up = state.usage?.providers || { claude: {}, antigravity: {} };
+
+  return `
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-title">${ICO.terminal}Claude Code</span>
+        <span class="sec-sub">${esc(maskEmail(state.native.email) || 'Native')}</span>
+      </div>
+      ${clQ?.windows?.length
+        ? `<div class="q-list">${clQ.windows.slice(0, 2).map(w => renderMeter(w, 'var(--claude)')).join('')}</div>`
+        : `<div class="muted-hint">${esc(clQ?.error ? tr('noClOauth') : tr('clickRefreshCl'))}</div>`}
+      <div class="chips">
+        <button class="chip ${!state.profiles.active ? 'active' : ''}" data-sw-cl="__native__">Native</button>
+        ${state.failover.chain?.length ? `<button class="chip ${state.profiles.active === FAILOVER_KEY ? 'active' : ''}" data-sw-cl="${FAILOVER_KEY}">Failover</button>` : ''}
+        ${clEntries.map(([k, p]) => `<button class="chip ${state.profiles.active === k ? 'active' : ''}" data-sw-cl="${esc(k)}">${esc(p.name)}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-title">${ICO.layers}Antigravity</span>
+        <span class="sec-sub">${esc(maskEmail(state.ag.email) || 'Offline')}</span>
+      </div>
+      ${agQ?.buckets?.length
+        ? `<div class="q-list">${agQ.buckets.map(w => renderMeter(w, 'var(--ag)')).join('')}</div>`
+        : `<div class="muted-hint">${esc(state.ag.loggedIn ? tr('clickRefreshAg') : tr('notSignedIn'))}</div>`}
+      <div class="chips">
+        ${(state.ag.accounts || []).map(a => `
+          <button class="chip ${state.ag.active === a.key ? 'active' : ''}" data-sw-ag="${esc(a.key)}" ${a.hasLogin ? '' : 'disabled'}>
+            ${esc(maskLabel(a.label, a.email))}
+          </button>`).join('') || `<span class="muted-hint">${esc(tr('noAccounts'))}</span>`}
+        ${savedAg.length >= 2 ? `<button class="chip" data-act="ag-next" title="${esc(tr('nextAccTip'))}">${ICO.swap}</button>` : ''}
+      </div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-box">
+        <span class="stat-lbl">${esc(tr('today'))}</span>
+        <span class="stat-val">${fmtTok((up.claude.todayTokens || 0) + (up.antigravity.todayTokens || 0))} · ${fmtUsd((up.claude.todayCost || 0) + (up.antigravity.todayCost || 0))}</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-lbl">${esc(tr('days30'))}</span>
+        <span class="stat-val">${fmtTok((up.claude.total30dTokens || 0) + (up.antigravity.total30dTokens || 0))} · ${fmtUsd((up.claude.total30dCost || 0) + (up.antigravity.total30dCost || 0))}</span>
+      </div>
+    </div>`;
+}
+
+function renderClaudeTab() {
+  const clQ = state.quota?.claude;
+  const entries = Object.entries(state.profiles.profiles || {}).sort(([a], [b]) => a.localeCompare(b));
+  return `
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-title">${ICO.terminal}${esc(tr('clQuotaTitle'))}</span>
+        <button class="chip" data-act="kc-refresh">${esc(tr('checkKeychain'))}</button>
+      </div>
+      ${clQ?.windows?.length
+        ? `<div class="q-list">${clQ.windows.map(w => renderMeter(w, 'var(--claude)')).join('')}</div>`
+        : `<div class="muted-hint">${esc(tr('noClQuotaMsg'))}</div>`}
+    </div>
+    <div class="section">
+      <div class="sec-head"><span class="sec-title">${esc(tr('profiles'))}</span></div>
+      <div class="rows">
+        <button class="row-btn ${!state.profiles.active ? 'active' : ''}" data-sw-cl="__native__">
+          <span class="row-l"><span class="dot ${!state.profiles.active ? 'cl' : ''}"></span>
+            <span class="row-txt"><span class="row-name">Native</span><span class="row-sub">${esc(maskEmail(state.native.email) || tr('defaultSub'))}</span></span>
+          </span>
+          ${!state.profiles.active ? '<span class="row-tag">Active</span>' : ''}
+        </button>
+        ${state.failover.chain?.length ? `
+          <button class="row-btn ${state.profiles.active === FAILOVER_KEY ? 'active' : ''}" data-sw-cl="${FAILOVER_KEY}">
+            <span class="row-l"><span class="dot ${state.failover.running ? 'ok' : ''}"></span>
+              <span class="row-txt"><span class="row-name">Failover</span><span class="row-sub">${esc(state.failover.chain.join(' → '))}</span></span>
+            </span>
+            ${state.profiles.active === FAILOVER_KEY ? '<span class="row-tag">Active</span>' : ''}
+          </button>` : ''}
+        ${entries.map(([k, p]) => `
+          <button class="row-btn ${state.profiles.active === k ? 'active' : ''}" data-sw-cl="${esc(k)}">
+            <span class="row-l"><span class="dot ${state.profiles.active === k ? 'cl' : ''}"></span>
+              <span class="row-txt"><span class="row-name">${esc(p.name)}</span><span class="row-sub">${esc(maskUrl(p.env?.ANTHROPIC_BASE_URL) || k)}</span></span>
+            </span>
+            ${state.profiles.active === k ? '<span class="row-tag">Active</span>' : ''}
+          </button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderAntigravityTab() {
+  const agQ = activeAgQuota();
+  const savedCount = (state.ag.accounts || []).filter(a => a.hasLogin).length;
+  return `
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-title">${ICO.layers}${esc(tr('agQuotaTitle'))}</span>
+        <span class="sec-sub">${esc(maskEmail(state.ag.email) || 'Offline')}</span>
+      </div>
+      ${agQ?.buckets?.length
+        ? `<div class="q-list">${agQ.buckets.map(w => renderMeter(w, 'var(--ag)')).join('')}</div>`
+        : `<div class="muted-hint">${esc(tr('agQuotaHint'))}</div>`}
+    </div>
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-title">${esc(tr('accounts'))}</span>
+        <span class="sec-sub">${esc(tr('savedCount', { s: savedCount, t: (state.ag.accounts || []).length }))}</span>
+      </div>
+      <div class="rows">
+        ${(state.ag.accounts || []).map(a => {
+          const isAct = state.ag.active === a.key;
+          const accQ = state.quota?.antigravity?.[a.key];
+          const minPct = accQ?.buckets?.length ? Math.min(...accQ.buckets.map(b => b.remainingPercent)).toFixed(0) + '%' : '';
+          return `
+            <button class="row-btn ${isAct ? 'active' : ''}" data-sw-ag="${esc(a.key)}" ${a.hasLogin ? '' : 'disabled'}>
+              <span class="row-l"><span class="dot ${isAct ? 'ag' : a.hasLogin ? 'ok' : ''}"></span>
+                <span class="row-txt">
+                  <span class="row-name">${esc(maskLabel(a.label, a.email))}</span>
+                  <span class="row-sub">${esc(maskEmail(a.email) || a.key)}</span>
+                </span>
+              </span>
+              <span class="row-tag">${isAct ? 'Active' : minPct}</span>
+            </button>`;
+        }).join('') || `<div class="muted-hint">${esc(tr('noAccounts'))}</div>`}
+      </div>
+      <div class="act-row">
+        <button class="btn" data-act="ag-capture" ${state.ag.loggedIn ? '' : 'disabled'}>${esc(tr('capture'))}</button>
+        <button class="btn" data-act="ag-next" ${savedCount >= 2 ? '' : 'disabled'}>${ICO.swap}${esc(tr('next'))}</button>
+      </div>
+    </div>`;
+}
+
+let lastRenderedHtml = '';
+const segTabs = Array.from(document.querySelectorAll('.seg-tab'));
+
+function render() {
+  for (const p of segTabs) p.classList.toggle('active', p.dataset.tab === state.tab);
+  const nextHtml = state.tab === 'claude' ? renderClaudeTab()
+    : state.tab === 'antigravity' ? renderAntigravityTab()
+    : renderOverview();
+  if (nextHtml !== lastRenderedHtml) {
+    lastRenderedHtml = nextHtml;
+    $('content').innerHTML = nextHtml;
+  }
+}
+
+$('content').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if (!btn || btn.disabled || state.busy) return;
+
+  if (btn.dataset.swCl !== undefined) {
+    state.busy = true;
+    try { await invoke('switch_profile', { key: btn.dataset.swCl }); toast(tr('swClaudeOk')); await loadAll(); }
+    catch (err) { toast(tr('errPrefix') + err); }
+    state.busy = false;
+    return;
+  }
+  if (btn.dataset.swAg !== undefined) {
+    state.busy = true; toast(tr('swAgWait'));
+    try { await invoke('antigravity_switch', { key: btn.dataset.swAg }); toast(tr('swAgOk')); await loadAll(); }
+    catch (err) { toast(tr('errPrefix') + err); }
+    state.busy = false;
+    return;
+  }
+  const act = btn.dataset.act;
+  if (act === 'ag-next') {
+    state.busy = true; toast(tr('swWait'));
+    try { const acc = await invoke('antigravity_switch_next'); toast(tr('swTo', { n: maskLabel(acc.label, acc.email) })); await loadAll(); }
+    catch (err) { toast(tr('errPrefix') + err); }
+    state.busy = false;
+  } else if (act === 'ag-capture') {
+    state.busy = true;
+    try { await invoke('antigravity_capture', { key: null }); toast(tr('capturedOk')); await loadAll(); }
+    catch (err) { toast(tr('errPrefix') + err); }
+    state.busy = false;
+  } else if (act === 'kc-refresh') {
+    refreshQuotas(true);
+  }
+});
+
+let loadingInFlight = null, lastUsageAt = 0, dirtyWhileHidden = false, debounceTimer = null;
+
+async function loadAll(forceUsage = false) {
+  if (loadingInFlight) return loadingInFlight;
+  loadingInFlight = (async () => {
+    const needUsage = forceUsage || !state.usage || (Date.now() - lastUsageAt > 35_000);
+    try {
+      const snap = await invoke('get_popover_state', {
+        includeUsage: needUsage,
+        tzOffset: -new Date().getTimezoneOffset(),
+      });
+      state.prefs = snap.prefs || state.prefs;
+      state.profiles = snap.profiles || state.profiles;
+      state.native = snap.native || state.native;
+      state.failover = snap.failover || state.failover;
+      state.ag = snap.ag || state.ag;
+      state.quota = snap.quota || state.quota;
+      if (snap.usage) {
+        state.usage = snap.usage;
+        lastUsageAt = Date.now();
+      }
+      dirtyWhileHidden = false;
+      applyPrefs();
+      render();
+    } catch {}
+  })();
+  try { await loadingInFlight; } finally { loadingInFlight = null; }
+}
+
+async function refreshQuotas(allowKeychain = false) {
+  const btn = $('btn-refresh'); btn.classList.add('spin');
+  try {
+    state.quota = await invoke('refresh_all_quotas', { allowKeychain });
+    await loadAll();
+    toast(tr('quotaUpdated'));
+  } catch (e) { toast(tr('errPrefix') + e); }
+  finally { btn.classList.remove('spin'); }
+}
+
+function playEntrance() {
+  const s = $('shell');
+  s.classList.remove('entering');
+  void s.offsetWidth;
+  s.classList.add('entering');
+}
+
+$('btn-refresh').innerHTML = ICO.refresh;
+$('btn-dash').innerHTML = ICO.external;
+segTabs.forEach(p => p.onclick = () => { state.tab = p.dataset.tab; render(); });
+$('btn-refresh').onclick = () => refreshQuotas(false);
+$('btn-privacy').onclick = async () => {
+  state.prefs.privacyMode = !state.prefs.privacyMode;
+  applyPrefs(); render();
+  await invoke('save_preferences', { prefs: state.prefs }).catch(() => {});
+};
+$('foot-lang').onclick = async () => {
+  state.prefs.language = lang() === 'en' ? 'vi' : 'en';
+  applyPrefs(); render();
+  await invoke('save_preferences', { prefs: state.prefs }).catch(() => {});
+};
+$('btn-dash').onclick = () => invoke('open_dashboard', { section: null });
+$('foot-dash').onclick = () => invoke('open_dashboard', { section: 'settings' });
+$('foot-backup').onclick = () => invoke('open_dashboard', { section: 'backup' });
+$('foot-quit').onclick = () => invoke('quit_app');
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { invoke('hide_popover'); return; }
+  if ((e.metaKey || e.ctrlKey) && (e.key === 'r' || e.key === 'R')) { e.preventDefault(); refreshQuotas(false); return; }
+  if ((e.metaKey || e.ctrlKey) && e.key === ',') { e.preventDefault(); invoke('open_dashboard', { section: 'settings' }); return; }
+  if (!e.metaKey && !e.ctrlKey && !e.altKey) {
+    if (e.key === 'p' || e.key === 'P') $('btn-privacy').click();
+    else if (e.key === '1') { state.tab = 'overview'; render(); }
+    else if (e.key === '2') { state.tab = 'claude'; render(); }
+    else if (e.key === '3') { state.tab = 'antigravity'; render(); }
+  }
+});
+
+listen('state-changed', () => {
+  if (document.hidden) { dirtyWhileHidden = true; return; }
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => loadAll(false), 80);
+});
+listen('popover-opened', () => {
+  playEntrance();
+  loadAll(dirtyWhileHidden);
+});
+
+applyPrefs();
+playEntrance();
+loadAll();
+</script>
+</body>
+</html>

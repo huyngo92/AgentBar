@@ -1,0 +1,16 @@
+{
+  "active": "",
+  "profiles": {
+    "gateway-1": {
+      "name": "Gateway Primary",
+      "modelPrefix": "cc/",
+      "env": {
+        "ANTHROPIC_BASE_URL": "https://your-gateway.example.com",
+        "ANTHROPIC_AUTH_TOKEN": "sk-your-api-token-here",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "cc/claude-opus-5-5",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "cc/claude-sonnet-5-5",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "cc/claude-haiku-5-5"
+      }
+    }
+  }
+}

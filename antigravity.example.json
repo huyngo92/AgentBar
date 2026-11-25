@@ -1,0 +1,19 @@
+{
+  "active": "",
+  "accounts": [
+    {
+      "key": "PRO-01",
+      "label": "Work Pro 01",
+      "email": "account1@example.com",
+      "notes": "Primary Gemini Antigravity account",
+      "savedAt": 0
+    },
+    {
+      "key": "PRO-02",
+      "label": "Personal Pro 02",
+      "email": "account2@example.com",
+      "notes": "Backup account",
+      "savedAt": 0
+    }
+  ]
+}

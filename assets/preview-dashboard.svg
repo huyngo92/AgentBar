@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="540" viewBox="0 0 880 540" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="880" y2="540" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0B0F19"/>
+    </linearGradient>
+    <filter id="winShadow" x="10" y="10" width="860" height="524" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <rect width="880" height="540" rx="18" fill="url(#bgGrad)"/>
+
+  <!-- Window Frame -->
+  <g filter="url(#winShadow)">
+    <rect x="28" y="22" width="824" height="496" rx="12" fill="#121317" stroke="#FFFFFF" stroke-opacity="0.15"/>
+  </g>
+
+  <!-- Vibrancy Sidebar -->
+  <path d="M28 34C28 27.3726 33.3726 22 40 22H216V518H40C33.3726 518 28 512.627 28 506V34Z" fill="#181B21"/>
+  <line x1="216" y1="22" x2="216" y2="518" stroke="#FFFFFF" stroke-opacity="0.10"/>
+
+  <!-- macOS Traffic Lights -->
+  <circle cx="48" cy="40" r="5.5" fill="#FF5F57"/>
+  <circle cx="66" cy="40" r="5.5" fill="#FEBC2E"/>
+  <circle cx="84" cy="40" r="5.5" fill="#28C840"/>
+
+  <!-- Brand -->
+  <circle cx="48" cy="72" r="2.5" stroke="#F2F4F8" stroke-width="1.6"/>
+  <circle cx="58" cy="67" r="2.5" stroke="#F2F4F8" stroke-width="1.6"/>
+  <circle cx="58" cy="77" r="2.5" stroke="#F2F4F8" stroke-width="1.6"/>
+  <path d="M50.5 72h2.5l2.5-5M53 72l2.5 5" stroke="#F2F4F8" stroke-width="1.5" stroke-linecap="round"/>
+  <text x="68" y="76" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="13.5" font-weight="700">AgentBar</text>
+
+  <!-- Sidebar Nav -->
+  <rect x="38" y="94" width="168" height="30" rx="7" fill="#242832" stroke="#FFFFFF" stroke-opacity="0.10"/>
+  <text x="64" y="113" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="12.5" font-weight="600">Usage</text>
+
+  <text x="64" y="145" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="12.5" font-weight="550">Claude</text>
+  <text x="196" y="145" text-anchor="end" fill="#707787" font-family="-apple-system, sans-serif" font-size="11">3</text>
+
+  <text x="64" y="175" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="12.5" font-weight="550">Antigravity</text>
+  <text x="196" y="175" text-anchor="end" fill="#707787" font-family="-apple-system, sans-serif" font-size="11">2</text>
+
+  <text x="64" y="205" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="12.5" font-weight="550">Backup</text>
+  <text x="64" y="235" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="12.5" font-weight="550">Settings</text>
+
+  <!-- Sidebar Footer -->
+  <line x1="38" y1="436" x2="206" y2="436" stroke="#FFFFFF" stroke-opacity="0.08"/>
+  <circle cx="46" cy="452" r="3" fill="#E38464"/>
+  <text x="55" y="456" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11">Claude: Failover</text>
+  <circle cx="46" cy="470" r="3" fill="#34D399"/>
+  <text x="55" y="474" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11">AG: PRO-01</text>
+
+  <rect x="38" y="484" width="32" height="24" rx="6" fill="#23262E" stroke="#FFFFFF" stroke-opacity="0.12"/>
+  <text x="54" y="500" text-anchor="middle" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="10.5" font-weight="700">EN</text>
+  <rect x="74" y="484" width="64" height="24" rx="6" fill="#23262E" stroke="#FFFFFF" stroke-opacity="0.12"/>
+  <text x="106" y="500" text-anchor="middle" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="10.5" font-weight="550">Masked</text>
+  <rect x="142" y="484" width="64" height="24" rx="6" fill="#23262E" stroke="#FFFFFF" stroke-opacity="0.12"/>
+  <text x="174" y="500" text-anchor="middle" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="10.5" font-weight="550">Quota</text>
+
+  <!-- Main Content Header -->
+  <text x="242" y="60" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="18" font-weight="700">Usage &amp; Spend</text>
+  <text x="242" y="76" fill="#707787" font-family="-apple-system, sans-serif" font-size="11.5">Tokens, estimated API spend &amp; live quotas</text>
+
+  <!-- Segmented Filters -->
+  <rect x="572" y="44" width="160" height="26" rx="7" fill="#23262E" stroke="#FFFFFF" stroke-opacity="0.12"/>
+  <rect x="574" y="46" width="38" height="22" rx="5" fill="#1A1C22"/>
+  <text x="593" y="61" text-anchor="middle" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">All</text>
+  <text x="636" y="61" text-anchor="middle" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11">Claude</text>
+  <text x="695" y="61" text-anchor="middle" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11">Antigravity</text>
+
+  <rect x="738" y="44" width="88" height="26" rx="7" fill="#23262E" stroke="#FFFFFF" stroke-opacity="0.12"/>
+  <text x="760" y="61" text-anchor="middle" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11">7d</text>
+  <rect x="780" y="46" width="44" height="22" rx="5" fill="#1A1C22"/>
+  <text x="802" y="61" text-anchor="middle" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">30d</text>
+
+  <!-- Main Chart Card -->
+  <rect x="242" y="92" width="584" height="248" rx="10" fill="#1A1C22" stroke="#FFFFFF" stroke-opacity="0.12"/>
+
+  <!-- 4 KPI Tiles -->
+  <rect x="256" y="106" width="132" height="58" rx="8" fill="#121317" stroke="#FFFFFF" stroke-opacity="0.10"/>
+  <text x="266" y="122" fill="#707787" font-family="-apple-system, sans-serif" font-size="10.5">Total tokens (30d)</text>
+  <text x="266" y="143" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="17" font-weight="700">42.6M</text>
+  <text x="266" y="157" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="10">42,618,940</text>
+
+  <rect x="397" y="106" width="132" height="58" rx="8" fill="#121317" stroke="#FFFFFF" stroke-opacity="0.10"/>
+  <text x="407" y="122" fill="#707787" font-family="-apple-system, sans-serif" font-size="10.5">Today</text>
+  <text x="407" y="143" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="17" font-weight="700">1.8M</text>
+  <text x="407" y="157" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="10">$4.62</text>
+
+  <rect x="538" y="106" width="132" height="58" rx="8" fill="#121317" stroke="#FFFFFF" stroke-opacity="0.10"/>
+  <text x="548" y="122" fill="#707787" font-family="-apple-system, sans-serif" font-size="10.5">Est. Cost (30d)</text>
+  <text x="548" y="143" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="17" font-weight="700">$118.40</text>
+  <text x="548" y="157" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="10">API estimate</text>
+
+  <rect x="679" y="106" width="133" height="58" rx="8" fill="#121317" stroke="#FFFFFF" stroke-opacity="0.10"/>
+  <text x="689" y="122" fill="#707787" font-family="-apple-system, sans-serif" font-size="10.5">Responses</text>
+  <text x="689" y="143" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="17" font-weight="700">1.4K</text>
+  <text x="689" y="157" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="10">Output: 3.9M</text>
+
+  <!-- Gridlines -->
+  <line x1="286" y1="182" x2="808" y2="182" stroke="#252830"/>
+  <line x1="286" y1="224" x2="808" y2="224" stroke="#252830"/>
+  <line x1="286" y1="266" x2="808" y2="266" stroke="#252830"/>
+  <line x1="286" y1="300" x2="808" y2="300" stroke="#353944"/>
+  <text x="280" y="186" text-anchor="end" fill="#707787" font-family="-apple-system, sans-serif" font-size="10">4M</text>
+  <text x="280" y="228" text-anchor="end" fill="#707787" font-family="-apple-system, sans-serif" font-size="10">2M</text>
+  <text x="280" y="303" text-anchor="end" fill="#707787" font-family="-apple-system, sans-serif" font-size="10">0</text>
+
+  <!-- Stacked Daily Bars (Claude Coral + Gemini Emerald + Blue) -->
+  <g>
+    <rect x="298" y="252" width="20" height="48" rx="2" fill="#E38464"/><rect x="298" y="228" width="20" height="22" rx="3" fill="#34D399"/>
+    <rect x="334" y="240" width="20" height="60" rx="2" fill="#E38464"/><rect x="334" y="210" width="20" height="28" rx="3" fill="#34D399"/>
+    <rect x="370" y="264" width="20" height="36" rx="2" fill="#E38464"/><rect x="370" y="244" width="20" height="18" rx="3" fill="#60A5FA"/>
+    <rect x="406" y="225" width="20" height="75" rx="2" fill="#E38464"/><rect x="406" y="196" width="20" height="27" rx="3" fill="#34D399"/>
+    <rect x="442" y="236" width="20" height="64" rx="2" fill="#E38464"/><rect x="442" y="206" width="20" height="28" rx="3" fill="#34D399"/>
+    <rect x="478" y="258" width="20" height="42" rx="2" fill="#E38464"/><rect x="478" y="234" width="20" height="22" rx="3" fill="#34D399"/>
+    <rect x="514" y="216" width="20" height="84" rx="2" fill="#E38464"/><rect x="514" y="186" width="20" height="28" rx="3" fill="#34D399"/>
+    <rect x="550" y="232" width="20" height="68" rx="2" fill="#E38464"/><rect x="550" y="200" width="20" height="30" rx="3" fill="#34D399"/>
+    <rect x="586" y="246" width="20" height="54" rx="2" fill="#E38464"/><rect x="586" y="218" width="20" height="26" rx="3" fill="#60A5FA"/>
+    <rect x="622" y="212" width="20" height="88" rx="2" fill="#E38464"/><rect x="622" y="182" width="20" height="28" rx="3" fill="#34D399"/>
+    <rect x="658" y="226" width="20" height="74" rx="2" fill="#E38464"/><rect x="658" y="194" width="20" height="30" rx="3" fill="#34D399"/>
+    <rect x="694" y="242" width="20" height="58" rx="2" fill="#E38464"/><rect x="694" y="210" width="20" height="30" rx="3" fill="#34D399"/>
+    <rect x="730" y="218" width="20" height="82" rx="2" fill="#E38464"/><rect x="730" y="188" width="20" height="28" rx="3" fill="#34D399"/>
+    <rect x="766" y="235" width="20" height="65" rx="2" fill="#E38464"/><rect x="766" y="203" width="20" height="30" rx="3" fill="#34D399"/>
+  </g>
+
+  <!-- Legend -->
+  <rect x="256" y="318" width="9" height="9" rx="2" fill="#E38464"/>
+  <text x="270" y="326" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11">claude-sonnet-5-5 <tspan fill="#F2F4F8" font-weight="650">24.1M</tspan></text>
+  <rect x="412" y="318" width="9" height="9" rx="2" fill="#34D399"/>
+  <text x="426" y="326" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11">gemini-4-carbon <tspan fill="#F2F4F8" font-weight="650">13.8M</tspan></text>
+  <rect x="562" y="318" width="9" height="9" rx="2" fill="#60A5FA"/>
+  <text x="576" y="326" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11">claude-opus-5-5 <tspan fill="#F2F4F8" font-weight="650">4.7M</tspan></text>
+
+  <!-- Bottom Split Cards -->
+  <rect x="242" y="352" width="286" height="148" rx="10" fill="#1A1C22" stroke="#FFFFFF" stroke-opacity="0.12"/>
+  <text x="256" y="374" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="13" font-weight="650">Quota &amp; Spend by Provider</text>
+
+  <circle cx="260" cy="396" r="3" fill="#E38464"/>
+  <text x="269" y="400" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">Claude Code</text>
+  <text x="514" y="400" text-anchor="end" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="650">28.8M · $86.20</text>
+  <rect x="256" y="410" width="258" height="4.5" rx="2.25" fill="#FFFFFF" fill-opacity="0.09"/>
+  <rect x="256" y="410" width="201" height="4.5" rx="2.25" fill="#E38464"/>
+
+  <circle cx="260" cy="444" r="3" fill="#34D399"/>
+  <text x="269" y="448" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">Gemini Antigravity</text>
+  <text x="514" y="448" text-anchor="end" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="650">13.8M · $32.20</text>
+  <rect x="256" y="458" width="258" height="4.5" rx="2.25" fill="#FFFFFF" fill-opacity="0.09"/>
+  <rect x="256" y="458" width="234" height="4.5" rx="2.25" fill="#34D399"/>
+
+  <!-- Top Models Card -->
+  <rect x="540" y="352" width="286" height="148" rx="10" fill="#1A1C22" stroke="#FFFFFF" stroke-opacity="0.12"/>
+  <text x="554" y="374" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="13" font-weight="650">Top Models (30d)</text>
+  <text x="812" y="374" text-anchor="end" fill="#707787" font-family="-apple-system, sans-serif" font-size="11">Est. USD</text>
+
+  <text x="554" y="400" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="600">claude-sonnet-5-5</text>
+  <text x="812" y="400" text-anchor="end" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11.5"><tspan fill="#F2F4F8" font-weight="650">24.1M</tspan> · $58.40</text>
+  <rect x="554" y="406" width="258" height="4" rx="2" fill="#FFFFFF" fill-opacity="0.09"/>
+  <rect x="554" y="406" width="258" height="4" rx="2" fill="#E38464"/>
+
+  <text x="554" y="434" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="600">gemini-4-carbon</text>
+  <text x="812" y="434" text-anchor="end" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11.5"><tspan fill="#F2F4F8" font-weight="650">13.8M</tspan> · $32.20</text>
+  <rect x="554" y="440" width="258" height="4" rx="2" fill="#FFFFFF" fill-opacity="0.09"/>
+  <rect x="554" y="440" width="152" height="4" rx="2" fill="#34D399"/>
+
+  <text x="554" y="468" fill="#F2F4F8" font-family="-apple-system, sans-serif" font-size="11.5" font-weight="600">claude-opus-5-5</text>
+  <text x="812" y="468" text-anchor="end" fill="#A8AFBE" font-family="-apple-system, sans-serif" font-size="11.5"><tspan fill="#F2F4F8" font-weight="650">4.7M</tspan> · $27.80</text>
+  <rect x="554" y="474" width="258" height="4" rx="2" fill="#FFFFFF" fill-opacity="0.09"/>
+  <rect x="554" y="474" width="68" height="4" rx="2" fill="#E38464"/>
+</svg>

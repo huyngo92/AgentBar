@@ -1,0 +1,40 @@
+# Personal configs & secrets (keep local, never commit!)
+profiles.json
+antigravity.json
+*backup*.json
+*snapshot*.json
+.env
+.env.*
+*.local
+
+# OS & Editor files
+.DS_Store
+.AppleDouble
+.LSOverride
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# Node / Frontend
+node_modules/
+tauri-app/node_modules/
+tauri-app/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Rust / Tauri build artifacts
+target/
+tauri-app/src-tauri/target/
+tauri-app/src-tauri/gen/schemas/
+*.dmg
+*.app/
+*.msi
+*.exe
+
+# Legacy compiled Swift prototype binary
+/ClaudeGateway
+/OneDark.icns

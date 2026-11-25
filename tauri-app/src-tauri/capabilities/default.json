@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for dashboard and menubar popover windows",
+  "windows": ["settings", "popover"],
+  "permissions": [
+    "core:default",
+    "core:window:default",
+    "core:window:allow-hide",
+    "core:window:allow-show",
+    "core:window:allow-set-focus",
+    "core:window:allow-close",
+    "core:event:default",
+    "dialog:default"
+  ]
+}
