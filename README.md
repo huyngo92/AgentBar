@@ -82,13 +82,3 @@ node claude-switch.mjs restore-backup ./agentbar-backup.json [--replace]
 | `Esc` | Close Popover or Modal / Đóng Popover hoặc hộp thoại |
 
 ---
-
-## GitHub Repo Metadata
-
-Copy these directly into your GitHub repository's **About** settings for discoverability:
-
-- **Repository Name:** `AgentBar`
-- **Description:**
-  > Native macOS menu bar app to switch Claude Code gateways & Gemini Antigravity accounts in one click — with live 5h/weekly quotas, token spend analytics & auto-failover (Rust + Tauri v2).
-- **Topics:**
-  `agentbar` `claude-code` `antigravity` `gemini` `anthropic` `macos` `menubar` `tauri` `rust` `ai-agents` `token-usage` `rate-limit` `llm-gateway`
